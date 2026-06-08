@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RESTAURANTS } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
-import { TasteProfile } from "@/lib/types";
+import { gemScore, TasteProfile } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       : profile.vibes,
     price: parsed.price?.length ? (parsed.price as any) : profile.price,
     spiceTolerance: parsed.spiceTolerance ?? profile.spiceTolerance,
+    undergroundBias: parsed.undergroundBias ?? profile.undergroundBias ?? 0.7,
   };
   const localScored = recommend({
     profile: blended,
@@ -75,8 +76,13 @@ function composeLocalReply(
   if (top.length === 0)
     return "I couldn't find a great match for that — try a different craving or cuisine.";
   const first = top[0];
-  const why = first.reasons[0]?.label ?? "it's a top-rated pick";
-  return `For "${query}", I'd start with ${first.restaurant.name} — ${why.toLowerCase()} and it's a ${first.score}% match for your taste. Here are a few more lined up below.`;
+  const r = first.restaurant;
+  const gem = gemScore(r) >= 0.55;
+  const lead = gem
+    ? `Off-the-radar pick: ${r.name}`
+    : `I'd start with ${r.name}`;
+  const tip = gem && r.insiderTip ? ` ${r.insiderTip}` : "";
+  return `For "${query}", ${lead} — a ${first.score}% match for your taste.${tip} A few more lined up below.`;
 }
 
 async function askClaude(
@@ -92,18 +98,26 @@ async function askClaude(
     cuisines: s.restaurant.cuisines,
     price: s.restaurant.price,
     rating: s.restaurant.rating,
+    buzz: s.restaurant.buzz, // 0..1 mainstream awareness; low = hidden gem
+    gem: Math.round(gemScore(s.restaurant) * 100) / 100,
     vibes: s.restaurant.vibes,
     dietary: s.restaurant.dietary,
     neighborhood: s.restaurant.neighborhood,
     city: s.restaurant.city,
     signatureDishes: s.restaurant.signatureDishes,
+    insiderTip: s.restaurant.insiderTip,
     blurb: s.restaurant.blurb,
   }));
 
+  const leanUnderground = (profile.undergroundBias ?? 0.7) >= 0.5;
   const system =
-    "You are ReelEats' food concierge. From the candidate restaurants ONLY, pick the 3-4 best for the user's request and taste profile. " +
-    "Respond with STRICT JSON: {\"reply\": string, \"restaurantIds\": string[]}. " +
-    "The reply is 1-2 warm, specific sentences (mention a dish). restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
+    "You are ReelEats' food concierge. ReelEats is about discovering UNDER-THE-RADAR spots before everyone else. " +
+    "From the candidate restaurants ONLY, pick the 3-4 best for the user's request and taste profile. " +
+    (leanUnderground
+      ? "Favor hidden gems (low `buzz`, high `gem`) over obvious tourist hotspots unless the user explicitly asks for famous/popular places. When you pick a gem, work its insiderTip into the reply. "
+      : "") +
+    'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
+    "The reply is 1-2 warm, specific sentences (mention a dish or the insider tip). restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
 
   const userMsg =
     `User craving: "${query}"\n` +

@@ -12,6 +12,8 @@ export const DEFAULT_PROFILE: TasteProfile = {
   dietary: [],
   spiceTolerance: 1,
   adventurousness: 0.5,
+  // Default to leaning toward hidden gems — it's the product's whole point.
+  undergroundBias: 0.7,
 };
 
 interface AppState {

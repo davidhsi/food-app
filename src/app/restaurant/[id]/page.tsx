@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRestaurant } from "@/lib/data";
+import { gemScore } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import RankModal from "@/components/RankModal";
 import {
@@ -99,6 +100,11 @@ export default function RestaurantPage({
             <PinIcon width={13} height={13} />
             {r.neighborhood}, {r.city} · {r.distanceKm} km away
           </div>
+          {gemScore(r) >= 0.55 && (
+            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-fuchsia-500/80 to-violet-500/80 px-3 py-1 text-xs font-bold ring-1 ring-white/30">
+              💎 Under the radar · only {Math.round(r.buzz * 100)}% have found it
+            </div>
+          )}
         </div>
       </div>
 
@@ -136,6 +142,16 @@ export default function RestaurantPage({
           {reel.author} · {reel.likes.toLocaleString()} likes
         </p>
       </div>
+
+      {/* Insider tip */}
+      {r.insiderTip && (
+        <div className="mx-5 mt-5 rounded-2xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-3.5">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-fuchsia-300">
+            🤫 Insider tip
+          </div>
+          <p className="mt-1 text-sm text-white/90">{r.insiderTip}</p>
+        </div>
+      )}
 
       {/* About */}
       <div className="px-5 pt-5">

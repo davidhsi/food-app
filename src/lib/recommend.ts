@@ -1,5 +1,6 @@
 import { RESTAURANTS } from "./data";
 import {
+  gemScore,
   RankedEntry,
   Restaurant,
   ScoredRestaurant,
@@ -117,6 +118,23 @@ export function scoreRestaurant(
   if (r.rating >= 9)
     reasons.push({ label: `Top-rated ${r.rating.toFixed(1)}`, weight: 16 });
 
+  // 7b. Underground bias — the heart of the "find it first" wedge.
+  // Reward high-quality, low-buzz gems; when the user leans underground,
+  // also nudge down the obvious, crowded hotspots.
+  const gem = gemScore(r); // 0..1: great but not yet famous
+  const bias = profile.undergroundBias ?? 0.5;
+  if (bias > 0) {
+    const w = bias * gem * 30;
+    score += w;
+    if (gem >= 0.45 && bias >= 0.4)
+      reasons.push({
+        label: r.buzz <= 0.35 ? `Under the radar 💎` : `Local gem`,
+        weight: w,
+      });
+  }
+  // Demote tourist-trap mainstream spots for gem-seekers.
+  if (bias >= 0.6 && r.buzz >= 0.8) score -= (bias - 0.5) * r.buzz * 16;
+
   // 8. Implicit affinity from history (content-based collaborative signal)
   const { cuisineWeight, vibeWeight } = affinityFromHistory(state);
   let affinity = 0;
@@ -134,11 +152,17 @@ export function scoreRestaurant(
   // 10. Novelty / already-seen damping
   if (state.seen?.includes(r.id)) score -= 12;
 
-  // Normalize to a friendly 0..100 match score.
-  const normalized = Math.round(clamp(score / 110) * 100);
+  // Normalize to a friendly 0..100 match score. Divisor accounts for the
+  // added underground dimension so scores keep a believable spread.
+  const precise = clamp(score / 125) * 100;
 
   reasons.sort((a, b) => b.weight - a.weight);
-  return { restaurant: r, score: normalized, reasons: reasons.slice(0, 3) };
+  return {
+    restaurant: r,
+    score: Math.round(precise),
+    precise,
+    reasons: reasons.slice(0, 3),
+  };
 }
 
 export function recommend(
@@ -147,7 +171,7 @@ export function recommend(
 ): ScoredRestaurant[] {
   return pool
     .map((r) => scoreRestaurant(r, state))
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.precise - a.precise);
 }
 
 /** Lightweight natural-language search used by the AI assistant fallback. */
@@ -212,6 +236,16 @@ export function parseQuery(q: string): Partial<TasteProfile> & {
   if (/(cheap|budget|affordable)/.test(text)) profile.price = [1] as any;
   if (/(fancy|upscale|fine|nice)/.test(text)) profile.price = [3, 4] as any;
   if (/(spicy|spice|hot)/.test(text)) profile.spiceTolerance = 3;
+
+  // Underground intent — push hard toward gems.
+  if (
+    /(hidden|gem|underground|secret|hole|dive|off the|under the radar|locals?|undiscovered|no.?reservation|tucked)/.test(
+      text,
+    )
+  )
+    profile.undergroundBias = 0.95;
+  if (/(popular|famous|hot ?spot|iconic|best known|everyone)/.test(text))
+    profile.undergroundBias = 0.15;
 
   return profile;
 }

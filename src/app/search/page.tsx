@@ -8,14 +8,15 @@ import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { toFeedItems } from "@/lib/feed";
 import { useStore } from "@/lib/store";
-import { Restaurant } from "@/lib/types";
+import { gemScore, Restaurant } from "@/lib/types";
 
 const TRENDING = [
+  "hidden gems",
+  "hole in the wall",
   "spicy ramen late night",
-  "cheap tacos",
-  "date night seafood",
-  "vegan",
-  "soup dumplings",
+  "where locals eat",
+  "underground date spot",
+  "cash only",
 ];
 
 function matches(r: Restaurant, q: string): boolean {
@@ -43,21 +44,28 @@ export default function SearchPage() {
     // Combine literal text match with NL parsing, then rank by taste fit.
     let pool = RESTAURANTS;
     if (cuisine) pool = pool.filter((r) => r.cuisines.includes(cuisine as any));
+    const parsed = active ? parseQuery(active) : { keywords: [] };
     if (active) {
       const direct = pool.filter((r) => matches(r, active));
-      const parsed = parseQuery(active);
       const byParse = pool.filter((r) => {
         const cu = parsed.cuisines?.some((c) => r.cuisines.includes(c)) ?? false;
         const vi = parsed.vibes?.some((v) => r.vibes.includes(v)) ?? false;
         return cu || vi;
       });
       const merged = Array.from(new Set([...direct, ...byParse]));
-      pool = merged.length ? merged : pool.filter((r) => matches(r, active));
+      // For underground-intent queries (e.g. "hidden gems"), rank the whole
+      // pool by taste rather than returning nothing.
+      const undergroundIntent = (parsed.undergroundBias ?? 0) >= 0.5;
+      pool = merged.length ? merged : undergroundIntent ? pool : [];
     }
 
     const scored = recommend(
       {
-        profile: store.profile,
+        profile: {
+          ...store.profile,
+          undergroundBias:
+            parsed.undergroundBias ?? store.profile.undergroundBias,
+        },
         liked: store.liked,
         saved: store.saved,
         ranked: store.ranked,
@@ -152,11 +160,11 @@ export default function SearchPage() {
             </div>
 
             <h2 className="mt-8 text-sm font-semibold text-white/50">
-              Popular near you
+              💎 Under the radar near you
             </h2>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {[...RESTAURANTS]
-                .sort((a, b) => b.popularity - a.popularity)
+                .sort((a, b) => gemScore(b) - gemScore(a))
                 .slice(0, 6)
                 .map((r) => (
                   <button

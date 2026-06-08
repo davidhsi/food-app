@@ -14,6 +14,7 @@ export type Cuisine =
   | "Vietnamese"
   | "Spanish"
   | "Ethiopian"
+  | "African"
   | "Vegan"
   | "Seafood"
   | "BBQ"
@@ -59,7 +60,11 @@ export interface Restaurant {
   cuisines: Cuisine[];
   price: Price;
   rating: number; // 0..10 community score (Beli-style)
-  popularity: number; // 0..1
+  popularity: number; // 0..1 — how much in-app love it gets
+  /** 0..1 mainstream awareness. Low buzz + high rating = a hidden gem. */
+  buzz: number;
+  /** A regular's tip — how to order/visit like you're in on the secret. */
+  insiderTip?: string;
   neighborhood: string;
   city: string;
   distanceKm: number;
@@ -72,6 +77,12 @@ export interface Restaurant {
   reels: Reel[];
 }
 
+/** How "under the radar" a spot is: high quality the crowds haven't found yet. */
+export function gemScore(r: Restaurant): number {
+  const quality = r.rating / 10; // 0..1
+  return Math.max(0, Math.min(1, quality * (1 - r.buzz)));
+}
+
 export interface TasteProfile {
   cuisines: Cuisine[];
   price: Price[]; // acceptable price points
@@ -79,6 +90,8 @@ export interface TasteProfile {
   dietary: Dietary[];
   spiceTolerance: number; // 0..3
   adventurousness: number; // 0..1 — willingness to try unfamiliar cuisines
+  /** 0..1 — preference for under-the-radar gems over the popular hotspots. */
+  undergroundBias: number;
 }
 
 export type ListType = "been" | "want";
@@ -96,6 +109,7 @@ export interface RecommendationReason {
 
 export interface ScoredRestaurant {
   restaurant: Restaurant;
-  score: number; // 0..100 match score
+  score: number; // 0..100 match score, rounded for display
+  precise: number; // unrounded match score — sort on this to avoid ties
   reasons: RecommendationReason[];
 }

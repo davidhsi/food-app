@@ -15,10 +15,10 @@ interface Msg {
 }
 
 const SUGGESTIONS = [
-  "I want something spicy and cheap tonight",
-  "Date night, not too loud",
-  "Late-night comfort food",
-  "Impress out-of-town friends",
+  "Find me a hidden gem for dinner tonight",
+  "An underground spot to impress a date",
+  "Hole-in-the-wall, spicy, cash is fine",
+  "Where do locals actually eat near me?",
 ];
 
 export default function AssistantPage() {
@@ -84,8 +84,9 @@ export default function AssistantPage() {
             <div className="mt-6">
               <div className="text-center text-5xl">🍽️✨</div>
               <p className="mt-4 text-center text-sm text-white/60">
-                Ask for a recommendation in plain English. I&apos;ll match it to
-                your taste and pull up the reels.
+                Tell me what you&apos;re after and I&apos;ll dig up the
+                under-the-radar spots that fit your taste — with the insider tip
+                to order like a regular.
               </p>
               <div className="mt-6 space-y-2">
                 {SUGGESTIONS.map((s) => (

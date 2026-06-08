@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Reel, RecommendationReason, Restaurant } from "@/lib/types";
+import { gemScore, Reel, RecommendationReason, Restaurant } from "@/lib/types";
 import ActionRail from "./ActionRail";
 import { PinIcon, StarIcon } from "./icons";
 
@@ -73,12 +73,19 @@ export default function ReelCard({
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-      {/* Match badge */}
-      {matchScore !== undefined && (
-        <div className="absolute left-4 top-4 z-10 animate-floatUp rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur-md ring-1 ring-white/25">
-          <span className="text-brand-glow">✦</span> {matchScore}% match
-        </div>
-      )}
+      {/* Badges */}
+      <div className="absolute left-4 top-4 z-10 flex flex-col items-start gap-1.5">
+        {matchScore !== undefined && (
+          <div className="animate-floatUp rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur-md ring-1 ring-white/25">
+            <span className="text-brand-glow">✦</span> {matchScore}% match
+          </div>
+        )}
+        {gemScore(r) >= 0.55 && (
+          <div className="animate-floatUp rounded-full bg-gradient-to-r from-fuchsia-500/80 to-violet-500/80 px-3 py-1.5 text-xs font-bold backdrop-blur-md ring-1 ring-white/30">
+            💎 Under the radar
+          </div>
+        )}
+      </div>
 
       {/* Action rail */}
       <div className="absolute bottom-28 right-3 z-10">

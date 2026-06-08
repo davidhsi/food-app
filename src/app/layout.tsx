@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ReelEats — taste, on repeat",
+  title: "ReelEats — find the spots before everyone else",
   description:
-    "A Beli-style restaurant discovery app built around a Reels feed and an AI recommendation engine.",
+    "An AI restaurant-discovery app for under-the-radar gems, in the shape of a Reels feed.",
 };
 
 export const viewport: Viewport = {

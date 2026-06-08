@@ -122,6 +122,31 @@ export default function Onboarding() {
         <div className="space-y-7">
           <div>
             <div className="mb-2 flex justify-between text-sm">
+              <span className="font-semibold">Hidden gems vs. hotspots</span>
+              <span className="text-white/60">
+                {p.undergroundBias < 0.34
+                  ? "Crowd favorites"
+                  : p.undergroundBias < 0.7
+                    ? "A mix"
+                    : "Underground only 💎"}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={p.undergroundBias * 100}
+              onChange={(e) =>
+                setP({ ...p, undergroundBias: Number(e.target.value) / 100 })
+              }
+              className="w-full accent-brand"
+            />
+            <p className="mt-1 text-xs text-white/40">
+              How hard should we dig for spots the crowds haven&apos;t found yet?
+            </p>
+          </div>
+          <div>
+            <div className="mb-2 flex justify-between text-sm">
               <span className="font-semibold">Spice tolerance</span>
               <span className="text-white/60">
                 {["Mild", "Medium", "Hot", "Inferno"][p.spiceTolerance]}
@@ -191,7 +216,8 @@ export default function Onboarding() {
               Reel<span className="text-brand">Eats</span>
             </div>
             <p className="mt-1 text-sm text-white/55">
-              Discover restaurants through reels — ranked for your taste.
+              Find the underground spots before everyone else — ranked for your
+              taste.
             </p>
           </div>
         )}
