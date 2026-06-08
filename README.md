@@ -45,6 +45,8 @@ export ANTHROPIC_MODEL=claude-sonnet-4-6   # optional, this is the default
 
 ## 🚀 Run it
 
+### Locally
+
 ```bash
 npm install
 npm run dev      # http://localhost:3000
@@ -56,6 +58,14 @@ npm run typecheck                # strict TS check
 ```
 
 The UI is framed as a phone on desktop and goes full-screen on mobile widths.
+
+### Deploy to a public URL (one click)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/davidhsi/food-app/tree/claude/restaurant-reels-mvp-gGpe4&project-name=reeleats&repository-name=reeleats)
+
+The button clones this branch into a fresh repo and deploys it — **no env vars or database required** (the AI concierge falls back to the local engine). To enable the Claude-powered concierge, add `ANTHROPIC_API_KEY` in the Vercel project's *Settings → Environment Variables* and redeploy.
+
+**Prefer to deploy your existing repo?** In the [Vercel dashboard](https://vercel.com/new): *Add New → Project → Import `davidhsi/food-app`*, set the Production Branch to `claude/restaurant-reels-mvp-gGpe4` (Settings → Git), and click **Deploy**. Next.js is auto-detected; no extra config needed.
 
 ## 🗂️ Structure
 
