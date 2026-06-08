@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  background: #0c0c10;
+  color: #f5f5f7;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* hide scrollbars on the reels feed but keep scrollability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.snap-y-mandatory {
+  scroll-snap-type: y mandatory;
+}
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* phone frame for desktop viewing */
+.phone-shell {
+  width: 100%;
+  max-width: 430px;
+  height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: #0c0c10;
+}
+
+@media (min-width: 480px) {
+  .phone-shell {
+    height: min(900px, 100dvh);
+    margin-top: max(0px, calc((100dvh - 900px) / 2));
+    border-radius: 28px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+}
+
+.text-shadow {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.7);
+}
