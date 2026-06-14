@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { scoreRestaurant } from "@/lib/recommend";
 import RankModal from "@/components/RankModal";
 import ShareSpot from "@/components/ShareSpot";
+import UserDistance from "@/components/UserDistance";
 import {
   BookmarkIcon,
   ChevronLeft,
@@ -89,7 +90,8 @@ export default function RestaurantPage({
           </div>
           <div className="mt-0.5 flex items-center gap-1 text-xs text-paper/70">
             <PinIcon width={13} height={13} />
-            {r.neighborhood}, {r.city} · {r.distanceKm} km away
+            {r.neighborhood}, {r.city}
+            <UserDistance lat={r.lat} lng={r.lng} />
           </div>
         </div>
       </div>
