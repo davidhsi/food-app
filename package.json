@@ -1,8 +1,8 @@
 {
-  "name": "reeleats",
+  "name": "truffle",
   "version": "0.1.0",
   "private": true,
-  "description": "ReelEats — a Beli-style restaurant discovery app built around a Reels feed and an AI recommendation engine.",
+  "description": "Truffle — a calm, editorial discovery app for under-the-radar restaurants, built around a hidden-gem recommendation engine.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
