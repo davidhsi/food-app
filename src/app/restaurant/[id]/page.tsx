@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRestaurant } from "@/lib/data";
 import { gemScore } from "@/lib/types";
 import { useStore } from "@/lib/store";
+import { scoreRestaurant } from "@/lib/recommend";
 import RankModal from "@/components/RankModal";
+import ShareSpot from "@/components/ShareSpot";
 import {
   BookmarkIcon,
   ChevronLeft,
@@ -22,13 +24,23 @@ export default function RestaurantPage({
 }) {
   const router = useRouter();
   const r = getRestaurant(params.id);
-  const { liked, saved, ranked, toggleLike, toggleSave } = useStore();
+  const profile = useStore((s) => s.profile);
+  const liked = useStore((s) => s.liked);
+  const saved = useStore((s) => s.saved);
+  const ranked = useStore((s) => s.ranked);
+  const seen = useStore((s) => s.seen);
+  const toggleLike = useStore((s) => s.toggleLike);
+  const toggleSave = useStore((s) => s.toggleSave);
   const [ranking, setRanking] = useState(false);
-  const [activeReel, setActiveReel] = useState(0);
+
+  const scored = useMemo(
+    () => (r ? scoreRestaurant(r, { profile, liked, saved, ranked, seen }) : null),
+    [r, profile, liked, saved, ranked, seen],
+  );
 
   if (!r) {
     return (
-      <div className="phone-shell flex items-center justify-center text-white/60">
+      <div className="phone-shell flex items-center justify-center text-ink-soft">
         Restaurant not found.
       </div>
     );
@@ -37,136 +49,137 @@ export default function RestaurantPage({
   const isLiked = liked.includes(r.id);
   const isSaved = saved.includes(r.id);
   const myRank = ranked.find((e) => e.restaurantId === r.id);
-  const reel = r.reels[activeReel];
+  const poster = r.reels[0]?.poster;
+  const undiscovered = Math.round((1 - r.buzz) * 100);
+  const isGem = gemScore(r) >= 0.45;
 
   return (
-    <div className="phone-shell overflow-y-auto pb-8">
+    <div className="phone-shell overflow-y-auto bg-paper pb-10">
       {/* Hero */}
-      <div className="relative h-[46%] min-h-[320px]">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(160deg, ${reel.gradient[0]}, ${reel.gradient[1]})`,
-          }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center text-[120px] opacity-30">
-          {reel.emoji}
-        </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={reel.poster}
-          alt={r.name}
-          onError={(e) => (e.currentTarget.style.display = "none")}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
-
+      <div className="relative h-[44%] min-h-[300px] bg-line">
+        {poster && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={poster}
+            alt={r.name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink/85 to-transparent" />
         <button
+          type="button"
           onClick={() => router.back()}
-          className="absolute left-3 top-4 grid h-10 w-10 place-items-center rounded-full bg-black/40 backdrop-blur-md"
+          aria-label="Back"
+          className="absolute left-3 top-4 grid h-10 w-10 place-items-center rounded-full bg-paper-raised/90 text-ink backdrop-blur-sm"
         >
           <ChevronLeft width={22} height={22} />
         </button>
-
-        {/* Reel selector dots */}
-        {r.reels.length > 1 && (
-          <div className="absolute right-3 top-5 flex flex-col gap-1.5">
-            {r.reels.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveReel(i)}
-                className={`h-2 w-2 rounded-full ${
-                  i === activeReel ? "bg-white" : "bg-white/40"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
         <div className="absolute inset-x-0 bottom-0 p-5">
-          <h1 className="text-shadow text-3xl font-black leading-tight">
+          <h1 className="font-display text-3xl font-semibold leading-tight text-paper">
             {r.name}
           </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-white/85">
-            <span className="inline-flex items-center gap-1 font-bold text-brand-glow">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-paper/90">
+            <span className="inline-flex items-center gap-1 font-semibold text-[#cfe08a]">
               <StarIcon filled width={15} height={15} /> {r.rating.toFixed(1)}
             </span>
-            <span className="text-white/40">·</span>
+            <span className="text-paper/50">·</span>
             <span>{r.cuisines.join(" · ")}</span>
-            <span className="text-white/40">·</span>
+            <span className="text-paper/50">·</span>
             <span>{"$".repeat(r.price)}</span>
           </div>
-          <div className="mt-0.5 flex items-center gap-1 text-xs text-white/65">
+          <div className="mt-0.5 flex items-center gap-1 text-xs text-paper/70">
             <PinIcon width={13} height={13} />
             {r.neighborhood}, {r.city} · {r.distanceKm} km away
           </div>
-          {gemScore(r) >= 0.55 && (
-            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-fuchsia-500/80 to-violet-500/80 px-3 py-1 text-xs font-bold ring-1 ring-white/30">
-              💎 Under the radar · only {Math.round(r.buzz * 100)}% have found it
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Earliness cue (derived from buzz; not a live count) */}
+      {isGem && (
+        <div className="mx-5 mt-4 rounded-2xl border border-line bg-paper-raised px-4 py-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-olive">
+            ◷ You&apos;d be early
+          </div>
+          <p className="mt-0.5 text-sm text-ink-soft">
+            Still under the radar — only about {undiscovered}% of people have found it.
+          </p>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-2 px-5 py-4">
         <button
+          type="button"
           onClick={() => setRanking(true)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-brand py-3 text-sm font-bold shadow-lg shadow-brand/30 active:scale-95"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-olive py-3 text-sm font-semibold text-paper active:scale-95"
         >
           <PlusIcon width={18} height={18} />
           {myRank ? `Ranked ${myRank.score.toFixed(1)}` : "Rank it"}
         </button>
         <button
+          type="button"
           onClick={() => toggleSave(r.id)}
-          className={`grid h-12 w-12 place-items-center rounded-full ring-1 ring-white/15 active:scale-95 ${
-            isSaved ? "bg-brand-glow/20 text-brand-glow" : "bg-white/5"
+          aria-label="Save"
+          className={`grid h-12 w-12 place-items-center rounded-full ring-1 ring-line active:scale-95 ${
+            isSaved ? "bg-olive/15 text-olive" : "bg-paper-raised text-ink"
           }`}
         >
           <BookmarkIcon filled={isSaved} width={20} height={20} />
         </button>
         <button
+          type="button"
           onClick={() => toggleLike(r.id)}
-          className={`grid h-12 w-12 place-items-center rounded-full ring-1 ring-white/15 active:scale-95 ${
-            isLiked ? "bg-brand/20 text-brand" : "bg-white/5"
+          aria-label="Like"
+          className={`grid h-12 w-12 place-items-center rounded-full ring-1 ring-line active:scale-95 ${
+            isLiked ? "bg-olive/15 text-olive" : "bg-paper-raised text-ink"
           }`}
         >
           <HeartIcon filled={isLiked} width={20} height={20} />
         </button>
+        <ShareSpot restaurant={r} />
       </div>
 
-      {/* Caption */}
-      <div className="px-5">
-        <p className="text-sm text-white/85">{reel.caption}</p>
-        <p className="mt-1 text-xs text-white/45">
-          {reel.author} · {reel.likes.toLocaleString()} likes
-        </p>
-      </div>
+      {/* Why you */}
+      {scored && scored.reasons.length > 0 && (
+        <div className="px-5">
+          <h2 className="text-sm font-semibold text-ink-faint">Why you&apos;ll like it</h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {scored.reasons.map((why) => (
+              <span
+                key={why.label}
+                className="rounded-full bg-paper-raised px-3 py-1.5 text-xs font-medium text-ink-soft ring-1 ring-line"
+              >
+                {why.label.replace(/\s*🌶️/g, "").replace(/\s*💎/g, "").trim()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Insider tip */}
       {r.insiderTip && (
-        <div className="mx-5 mt-5 rounded-2xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-3.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-fuchsia-300">
-            🤫 Insider tip
+        <div className="mx-5 mt-5 rounded-2xl border border-line bg-paper-raised p-3.5">
+          <div className="text-xs font-semibold uppercase tracking-wide text-olive">
+            Order like a regular
           </div>
-          <p className="mt-1 text-sm text-white/90">{r.insiderTip}</p>
+          <p className="mt-1 text-sm text-ink">{r.insiderTip}</p>
         </div>
       )}
 
       {/* About */}
       <div className="px-5 pt-5">
-        <h2 className="text-sm font-bold text-white/50">About</h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-white/85">{r.blurb}</p>
+        <h2 className="text-sm font-semibold text-ink-faint">About</h2>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink">{r.blurb}</p>
       </div>
 
       {/* Signature dishes */}
       <div className="px-5 pt-5">
-        <h2 className="text-sm font-bold text-white/50">Signature dishes</h2>
+        <h2 className="text-sm font-semibold text-ink-faint">Signature dishes</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {r.signatureDishes.map((d) => (
             <span
               key={d}
-              className="rounded-full bg-white/8 px-3 py-1.5 text-xs font-medium ring-1 ring-white/10"
+              className="rounded-full bg-paper-raised px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-line"
             >
               {d}
             </span>
@@ -174,14 +187,14 @@ export default function RestaurantPage({
         </div>
       </div>
 
-      {/* Tags / vibes */}
+      {/* Known for */}
       <div className="px-5 pt-5">
-        <h2 className="text-sm font-bold text-white/50">Known for</h2>
+        <h2 className="text-sm font-semibold text-ink-faint">Known for</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {[...r.tags, ...r.vibes.map((v) => v.replace("-", " "))].map((t) => (
             <span
               key={t}
-              className="rounded-full bg-white/5 px-3 py-1.5 text-xs text-white/70 ring-1 ring-white/10"
+              className="rounded-full bg-paper-raised px-3 py-1.5 text-xs text-ink-soft ring-1 ring-line"
             >
               #{t.replace(/\s+/g, "")}
             </span>
@@ -189,9 +202,7 @@ export default function RestaurantPage({
         </div>
       </div>
 
-      {ranking && (
-        <RankModal restaurant={r} onClose={() => setRanking(false)} />
-      )}
+      {ranking && <RankModal restaurant={r} onClose={() => setRanking(false)} />}
     </div>
   );
 }
