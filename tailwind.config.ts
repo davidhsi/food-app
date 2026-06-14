@@ -13,8 +13,6 @@ const config: Config = {
         olive: "#5c6b2e",
         "olive-deep": "#445223",
         line: "#d9d6c8",
-        // legacy tokens — removed in a later task once no references remain
-        brand: { DEFAULT: "#5c6b2e", dark: "#445223", glow: "#7a8b3f" },
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

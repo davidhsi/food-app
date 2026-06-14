@@ -73,7 +73,7 @@ export default function AssistantPage() {
           </span>
           <div>
             <div className="font-display text-base font-semibold leading-none text-ink">
-              Reel Concierge
+              Spot Concierge
             </div>
             <div className="text-[11px] text-ink-faint">
               Tell me what you&apos;re craving
