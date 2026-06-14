@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import AppShell from "@/components/AppShell";
-import { SparkleIcon, StarIcon } from "@/components/icons";
+import SpotCard from "@/components/SpotCard";
+import { SparkleIcon } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
 
@@ -66,14 +66,16 @@ export default function AssistantPage() {
 
   return (
     <AppShell>
-      <div className="flex h-full flex-col">
-        <header className="flex items-center gap-2 border-b border-white/10 px-4 py-3.5">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand/20 text-brand">
+      <div className="flex h-full flex-col bg-paper">
+        <header className="flex items-center gap-2 border-b border-line px-4 py-3.5">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-olive/15 text-olive">
             <SparkleIcon filled width={20} height={20} />
           </span>
           <div>
-            <div className="text-base font-bold leading-none">Reel Concierge</div>
-            <div className="text-[11px] text-white/45">
+            <div className="font-display text-base font-semibold leading-none text-ink">
+              Reel Concierge
+            </div>
+            <div className="text-[11px] text-ink-faint">
               Tell me what you&apos;re craving
             </div>
           </div>
@@ -82,8 +84,7 @@ export default function AssistantPage() {
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 pb-24">
           {messages.length === 0 && (
             <div className="mt-6">
-              <div className="text-center text-5xl">🍽️✨</div>
-              <p className="mt-4 text-center text-sm text-white/60">
+              <p className="mt-4 text-center text-sm text-ink-soft">
                 Tell me what you&apos;re after and I&apos;ll dig up the
                 under-the-radar spots that fit your taste — with the insider tip
                 to order like a regular.
@@ -93,7 +94,7 @@ export default function AssistantPage() {
                   <button
                     key={s}
                     onClick={() => send(s)}
-                    className="block w-full rounded-2xl bg-white/5 px-4 py-3 text-left text-sm text-white/85 ring-1 ring-white/10 transition hover:bg-white/10 active:scale-[0.98]"
+                    className="block w-full rounded-2xl bg-paper-raised px-4 py-3 text-left text-sm text-ink-soft ring-1 ring-line transition hover:bg-olive hover:text-paper active:scale-[0.98]"
                   >
                     {s}
                   </button>
@@ -106,16 +107,16 @@ export default function AssistantPage() {
             <div key={i}>
               {m.role === "user" ? (
                 <div className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand px-4 py-2.5 text-sm font-medium">
+                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-olive px-4 py-2.5 text-sm font-medium text-paper">
                     {m.text}
                   </div>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="max-w-[88%] rounded-2xl rounded-bl-md bg-white/8 px-4 py-2.5 text-sm ring-1 ring-white/10">
+                  <div className="max-w-[88%] rounded-2xl rounded-bl-md bg-paper-raised px-4 py-2.5 text-sm text-ink ring-1 ring-line">
                     {m.text}
                     {m.engine && (
-                      <span className="ml-1 align-middle text-[10px] text-white/30">
+                      <span className="ml-1 align-middle text-[10px] text-ink-faint">
                         · {m.engine === "claude" ? "Claude" : "taste-engine"}
                       </span>
                     )}
@@ -125,34 +126,7 @@ export default function AssistantPage() {
                       {m.restaurantIds.map((id) => {
                         const r = getRestaurant(id);
                         if (!r) return null;
-                        return (
-                          <Link
-                            key={id}
-                            href={`/restaurant/${id}`}
-                            className="flex items-center gap-3 rounded-2xl bg-white/5 p-2.5 ring-1 ring-white/10 transition hover:bg-white/10 active:scale-[0.99]"
-                          >
-                            <div
-                              className="grid h-14 w-14 shrink-0 place-items-center rounded-xl text-2xl"
-                              style={{
-                                background: `linear-gradient(150deg, ${r.reels[0].gradient[0]}, ${r.reels[0].gradient[1]})`,
-                              }}
-                            >
-                              {r.reels[0].emoji}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate text-sm font-bold">
-                                {r.name}
-                              </div>
-                              <div className="truncate text-xs text-white/55">
-                                {r.cuisines.join(" · ")} · {"$".repeat(r.price)}
-                              </div>
-                              <div className="mt-0.5 flex items-center gap-1 text-xs text-brand-glow">
-                                <StarIcon filled width={12} height={12} />
-                                {r.rating.toFixed(1)} · {r.neighborhood}
-                              </div>
-                            </div>
-                          </Link>
-                        );
+                        return <SpotCard key={id} restaurant={r} />;
                       })}
                     </div>
                   )}
@@ -162,10 +136,10 @@ export default function AssistantPage() {
           ))}
 
           {loading && (
-            <div className="flex items-center gap-1.5 text-white/50">
-              <span className="h-2 w-2 animate-bounce rounded-full bg-white/50 [animation-delay:-0.2s]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-white/50 [animation-delay:-0.1s]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-white/50" />
+            <div className="flex items-center gap-1.5 text-ink-faint">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint [animation-delay:-0.2s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint [animation-delay:-0.1s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint" />
             </div>
           )}
           <div ref={endRef} />
@@ -176,19 +150,19 @@ export default function AssistantPage() {
             e.preventDefault();
             send(input);
           }}
-          className="absolute bottom-[68px] inset-x-0 border-t border-white/10 bg-black/70 p-3 backdrop-blur-xl"
+          className="absolute bottom-[68px] inset-x-0 border-t border-line bg-paper/90 p-3 backdrop-blur-xl"
         >
-          <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 ring-1 ring-white/15">
+          <div className="flex items-center gap-2 rounded-full bg-paper-raised px-4 py-2 ring-1 ring-line">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="What are you in the mood for?"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
+              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand text-white disabled:opacity-40"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-olive text-paper disabled:opacity-40"
             >
               ↑
             </button>
