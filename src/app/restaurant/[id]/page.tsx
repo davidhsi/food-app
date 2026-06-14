@@ -50,7 +50,7 @@ export default function RestaurantPage({
   const isSaved = saved.includes(r.id);
   const myRank = ranked.find((e) => e.restaurantId === r.id);
   const poster = r.reels[0]?.poster;
-  const undiscovered = Math.round((1 - r.buzz) * 100);
+  const found = Math.round(r.buzz * 100);
   const isGem = gemScore(r) >= 0.45;
 
   return (
@@ -101,7 +101,7 @@ export default function RestaurantPage({
             ◷ You&apos;d be early
           </div>
           <p className="mt-0.5 text-sm text-ink-soft">
-            Still under the radar — only about {undiscovered}% of people have found it.
+            Still under the radar — only about {found}% of people have found it.
           </p>
         </div>
       )}
