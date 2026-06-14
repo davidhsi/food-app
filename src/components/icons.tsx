@@ -91,3 +91,28 @@ export const ChevronLeft = (p: P) => (
     <path d="m15 18-6-6 6-6" />
   </svg>
 );
+
+export const GemIcon = (p: P) => (
+  <svg {...base(p)} fill={p.filled ? "currentColor" : "none"}>
+    <path d="M6 3h12l3 6-9 12L3 9z" />
+    <path d="M3 9h18M9 3 6 9l6 12 6-12-3-6" />
+  </svg>
+);
+
+export const ArrowRight = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
+export const XIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </svg>
+);
+
+export const ChevronDown = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
