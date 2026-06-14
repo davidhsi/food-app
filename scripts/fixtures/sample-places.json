@@ -1,0 +1,33 @@
+[
+  {
+    "id": "ChIJsampleRAMENkoba00001",
+    "displayName": { "text": "Ramen Koba" },
+    "rating": 4.7,
+    "userRatingCount": 180,
+    "priceLevel": "PRICE_LEVEL_MODERATE",
+    "types": ["ramen_restaurant", "restaurant"],
+    "location": { "latitude": 41.929, "longitude": -87.7 },
+    "formattedAddress": "2400 N California Ave, Chicago, IL",
+    "businessStatus": "OPERATIONAL",
+    "photos": [{ "name": "places/ChIJsampleRAMENkoba00001/photos/SAMPLEPHOTOREF1" }],
+    "reviews": [
+      { "text": { "text": "The black garlic tonkotsu is unreal. Go early, only 9 seats." } },
+      { "text": { "text": "Off-menu mazemen if you ask. Best ramen in Avondale." } }
+    ]
+  },
+  {
+    "id": "ChIJsampleTAQUERIA0002",
+    "displayName": { "text": "Taqueria El Milagro" },
+    "rating": 4.5,
+    "userRatingCount": 5200,
+    "priceLevel": "PRICE_LEVEL_INEXPENSIVE",
+    "types": ["mexican_restaurant", "restaurant"],
+    "location": { "latitude": 41.857, "longitude": -87.655 },
+    "formattedAddress": "1923 S Blue Island Ave, Chicago, IL",
+    "businessStatus": "OPERATIONAL",
+    "photos": [{ "name": "places/ChIJsampleTAQUERIA0002/photos/SAMPLEPHOTOREF2" }],
+    "reviews": [
+      { "text": { "text": "Tortillas made on site. The al pastor tacos are a Pilsen institution." } }
+    ]
+  }
+]
