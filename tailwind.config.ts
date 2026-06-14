@@ -13,6 +13,7 @@ const config: Config = {
         olive: "#5c6b2e",
         "olive-deep": "#445223",
         line: "#d9d6c8",
+        gem: "#cfe08a",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

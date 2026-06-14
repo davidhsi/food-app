@@ -29,7 +29,7 @@ export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) 
             />
           )}
           <div className="absolute left-3 top-3 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-semibold text-paper backdrop-blur-sm">
-            <span className="text-[#cfe08a]">◆</span> {score}
+            <span className="text-gem">◆</span> {score}
           </div>
         </div>
         <h3 className="mt-3 font-display text-2xl font-semibold leading-tight text-ink">

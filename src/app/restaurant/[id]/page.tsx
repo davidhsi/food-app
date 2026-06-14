@@ -79,7 +79,7 @@ export default function RestaurantPage({
             {r.name}
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-paper/90">
-            <span className="inline-flex items-center gap-1 font-semibold text-[#cfe08a]">
+            <span className="inline-flex items-center gap-1 font-semibold text-gem">
               <StarIcon filled width={15} height={15} /> {r.rating.toFixed(1)}
             </span>
             <span className="text-paper/50">·</span>
