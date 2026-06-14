@@ -41,16 +41,16 @@ export type Dietary =
   | "dairy-free";
 
 export interface Reel {
-  id: string;
+  id?: string;
   /** Optional looping mp4. If absent we render an animated photo poster. */
   video?: string;
-  poster: string; // image url
-  /** Cuisine-keyed gradient fallback that always renders, even offline. */
-  gradient: [string, string];
-  emoji: string;
-  caption: string;
-  author: string; // creator handle
-  likes: number;
+  poster: string; // image url (or /api/photo?ref=... proxy url)
+  /** Legacy fields — retained as optional, not rendered by the current UI. */
+  gradient?: [string, string];
+  emoji?: string;
+  caption?: string;
+  author?: string;
+  likes?: number;
   dish?: string;
 }
 
@@ -67,7 +67,10 @@ export interface Restaurant {
   insiderTip?: string;
   neighborhood: string;
   city: string;
-  distanceKm: number;
+  /** Geocoordinates from Places — used for live, client-side distance. */
+  lat: number;
+  lng: number;
+  distanceKm: number; // distance from the Chicago city-center reference point
   vibes: Vibe[];
   dietary: Dietary[];
   spice: number; // 0..3 typical heat
