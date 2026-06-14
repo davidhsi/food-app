@@ -166,32 +166,12 @@ export default function SearchPage() {
             <h2 className="font-display mt-8 text-sm font-semibold text-ink-faint">
               <span className="text-olive">◆</span> Under the radar near you
             </h2>
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3">
               {[...RESTAURANTS]
                 .sort((a, b) => gemScore(b) - gemScore(a))
                 .slice(0, 6)
                 .map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => {
-                      setQ(r.name);
-                      setSubmitted(r.name);
-                    }}
-                    className="overflow-hidden rounded-2xl text-left ring-1 ring-line"
-                    style={{
-                      background: `linear-gradient(150deg, ${r.reels[0].gradient[0]}, ${r.reels[0].gradient[1]})`,
-                    }}
-                  >
-                    <div className="flex h-24 items-center justify-center text-4xl">
-                      {r.reels[0].emoji}
-                    </div>
-                    <div className="bg-paper/60 p-2.5 backdrop-blur-sm">
-                      <div className="truncate text-sm font-semibold text-ink">{r.name}</div>
-                      <div className="text-[11px] text-ink-soft">
-                        {r.cuisines[0]} · {r.rating.toFixed(1)}
-                      </div>
-                    </div>
-                  </button>
+                  <SpotCard key={r.id} restaurant={r} />
                 ))}
             </div>
           </div>
