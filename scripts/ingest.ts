@@ -18,10 +18,17 @@ import { readCache, writeCache } from "./cache";
 
 const OUT = path.join(process.cwd(), "src", "lib", "restaurants.generated.json");
 const PER_NEIGHBORHOOD = 50;
-const MIN_REVIEWS = 10;
+const MIN_REVIEWS = 30;
 const FOOD_TYPES = new Set([
   "restaurant", "cafe", "coffee_shop", "bakery", "bar",
   "meal_takeaway", "meal_delivery", "ice_cream_shop", "dessert_shop",
+]);
+
+// Venues that may carry a food type but aren't really eateries.
+const EXCLUDE_TYPES = new Set([
+  "amusement_center", "amusement_park", "bowling_alley", "night_club",
+  "casino", "tourist_attraction", "shopping_mall", "supermarket",
+  "grocery_store", "convenience_store", "gas_station", "lodging", "hotel",
 ]);
 
 function isFood(p: RawPlace): boolean {
@@ -64,6 +71,7 @@ async function main() {
     if (!place.id || seen.has(place.id)) return false;
     if (place.businessStatus && place.businessStatus !== "OPERATIONAL") return false;
     if (!isFood(place)) return false;
+    if ((place.types ?? []).some((t) => EXCLUDE_TYPES.has(t))) return false;
     if (typeof place.rating !== "number") return false;
     if ((place.userRatingCount ?? 0) < MIN_REVIEWS) return false;
     if (!place.location) return false;

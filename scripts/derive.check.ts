@@ -43,4 +43,9 @@ const counts = [10, 50, 100, 5000];
 assert.equal(percentileRank(counts, 10), 0);
 assert.equal(percentileRank(counts, 5000), 1);
 
+assert.deepEqual(cuisinesFromTypes(["steak_house", "restaurant"], "Gibsons"), ["American"]);
+assert.deepEqual(cuisinesFromTypes(["greek_restaurant"], "Athena"), ["Mediterranean"]);
+assert.deepEqual(cuisinesFromTypes(["restaurant"], "Kung Fu Tea"), ["Cafe"]);
+assert.deepEqual(cuisinesFromTypes(["restaurant"], "Sweet Mandy B's Bakery"), ["Dessert"]);
+
 console.log("derive.check ok");
