@@ -72,11 +72,27 @@ npm run typecheck                # strict TS check
 
 The UI is framed as a phone on desktop and goes full-screen on mobile widths.
 
+### Generating the restaurant data
+
+The committed dataset (`src/lib/restaurants.generated.json`) is produced by the ingest pipeline — you don't need to run it to develop the UI, only to refresh the data:
+
+```bash
+# .env (gitignored)
+GOOGLE_PLACES_API_KEY=...      # required — enable "Places API (New)" in Google Cloud
+ANTHROPIC_API_KEY=sk-ant-...   # optional — grounded editorial; else a deterministic template
+
+npm run ingest                 # pull → derive gem fields → Claude editorial → write JSON
+npm run ingest -- --sample     # offline 2-record run from the fixture (no keys)
+npm run validate-data          # assert dataset invariants
+```
+
+Restaurants, gem scores, editorial, and cuisines are baked into the JSON, but **photos need `GOOGLE_PLACES_API_KEY` at runtime** (the `/api/photo` proxy serves them server-side).
+
 ### Deploy to a public URL (one click)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/davidhsi/food-app&project-name=truffle&repository-name=truffle)
 
-The button clones the repo into a fresh project and deploys it — **no env vars or database required** (the AI concierge falls back to the local engine). To enable the Claude-powered concierge, add `ANTHROPIC_API_KEY` in the Vercel project's *Settings → Environment Variables* and redeploy.
+The button clones the repo and deploys it. It runs with no database, but two server features read keys from *Settings → Environment Variables*: **`GOOGLE_PLACES_API_KEY`** for restaurant photos (the `/api/photo` proxy — without it cards render image-less), and optionally **`ANTHROPIC_API_KEY`** for the Claude-powered concierge (falls back to the local engine). Redeploy after adding them. Restrict the Google key to *Places API (New)* and set a billing cap — the proxy is public.
 
 **Prefer to deploy your existing repo?** In the [Vercel dashboard](https://vercel.com/new): *Add New → Project → Import `davidhsi/food-app`* (Production Branch `main`), and click **Deploy**. Next.js is auto-detected; no extra config needed.
 
@@ -98,12 +114,16 @@ src/
     recommend.ts       explainable scoring engine + NL query parser
     ranking.ts         Beli-style pairwise comparison ranking
     store.ts           Zustand store (persisted)
-    data.ts            mock restaurants + reel posters
+    data.ts            re-exports the generated restaurant dataset
+    geo.ts             haversine distance (shared by ingest + client)
+    restaurants.generated.json   real Chicago dataset (generated — do not hand-edit)
+scripts/               ingest pipeline: Google Places → derive → Claude editorial → JSON
+  app/api/photo/       server-side Google Places photo proxy (key stays server-side)
 ```
 
 ## 📝 Notes & strategic direction
 
-This is an MVP with a curated mock dataset. Card photos use Unsplash posters; when an image is unavailable a neutral placeholder surface is shown (the old gradient-and-emoji fallback was retired in the Warm Editorial redesign).
+The dataset is **real**: ~420 Chicago restaurants ingested from the Google Places API (New), with the hidden-gem `buzz` signal derived from review counts and the editorial copy + cuisines written by Claude Haiku. Photos are the venues' real Google photos, served through a server-side `/api/photo` proxy so the API key never reaches the browser. Regenerate anytime with `npm run ingest` (see *Generating the restaurant data* above).
 
 The deliberate bet is **anti-mainstream discovery** rather than "another video feed." That reframes the go-to-market around problems that are actually tractable for a small team:
 
@@ -111,4 +131,4 @@ The deliberate bet is **anti-mainstream discovery** rather than "another video f
 - **Niche beachhead** — launch one city / one underserved community (e.g. a city's true hole-in-the-walls, or allergen-safe gems) where coverage is achievable and the "found it first" status compounds.
 - **Curation over creation** — you need ~50 great spots per city from trusted locals, not a billion videos.
 
-Natural next steps toward production: a real backend + accounts (move `recommend()` to a cached `/api/feed`), geolocation + a Places source for real "near me", a friends graph for social proof, transaction monetization (bookings/affiliate), and — only once supply exists — rich media cards. See the in-repo review notes for the prioritized engineering backlog.
+Natural next steps toward production: a real backend + accounts (move `recommend()` to a cached `/api/feed` and persist user state server-side), incremental/scheduled re-ingestion instead of a manual `npm run ingest`, multi-city coverage, a friends graph for social proof, and transaction monetization (bookings/affiliate). See the in-repo specs/plans for the prioritized backlog.
