@@ -85,6 +85,6 @@ export const useStore = create<AppState>()(
           seen: [],
         }),
     }),
-    { name: "reeleats-store" },
+    { name: "truffle-store" },
   ),
 );

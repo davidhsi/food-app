@@ -33,8 +33,8 @@ export default function AppShell({
   if (!hydrated) {
     return (
       <div className="phone-shell flex items-center justify-center">
-        <div className="animate-pulse text-2xl font-black tracking-tight">
-          Reel<span className="text-brand">Eats</span>
+        <div className="animate-pulse font-display text-3xl font-semibold tracking-tight text-ink">
+          Truffle<span className="text-olive">.</span>
         </div>
       </div>
     );

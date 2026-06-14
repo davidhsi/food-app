@@ -65,12 +65,6 @@ export const StarIcon = (p: P) => (
   </svg>
 );
 
-export const CommentIcon = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z" />
-  </svg>
-);
-
 export const ShareIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
@@ -91,3 +85,16 @@ export const ChevronLeft = (p: P) => (
     <path d="m15 18-6-6 6-6" />
   </svg>
 );
+
+export const ArrowRight = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
+export const XIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </svg>
+);
+

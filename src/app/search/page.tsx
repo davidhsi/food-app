@@ -2,11 +2,10 @@
 
 import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
-import ReelFeed from "@/components/ReelFeed";
+import SpotCard from "@/components/SpotCard";
 import { SearchIcon } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
-import { toFeedItems } from "@/lib/feed";
 import { useStore } from "@/lib/store";
 import { gemScore, Restaurant } from "@/lib/types";
 
@@ -72,27 +71,27 @@ export default function SearchPage() {
       },
       pool,
     );
-    return toFeedItems(scored);
+    return scored;
   }, [submitted, cuisine, store.profile, store.liked, store.saved, store.ranked]);
 
   return (
     <AppShell>
       <div className="relative h-full">
         {/* Search header */}
-        <div className="absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/90 to-black/0 p-4 pb-6">
+        <div className="absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-paper to-paper/0 p-4 pb-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(q);
             }}
-            className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 ring-1 ring-white/15 backdrop-blur-md"
+            className="flex items-center gap-2 rounded-full bg-paper-raised px-4 py-2.5 ring-1 ring-line backdrop-blur-md"
           >
-            <SearchIcon width={18} height={18} className="text-white/60" />
+            <SearchIcon width={18} height={18} className="text-ink-faint" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search dishes, vibes, places…"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
+              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint focus:ring-0"
             />
             {q && (
               <button
@@ -101,7 +100,7 @@ export default function SearchPage() {
                   setQ("");
                   setSubmitted("");
                 }}
-                className="text-white/40"
+                className="text-ink-faint"
               >
                 ✕
               </button>
@@ -112,7 +111,7 @@ export default function SearchPage() {
             <button
               onClick={() => setCuisine(null)}
               className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-                !cuisine ? "bg-brand text-white" : "bg-white/10 text-white/70"
+                !cuisine ? "bg-olive text-paper" : "bg-paper-raised text-ink-soft ring-1 ring-line"
               }`}
             >
               All
@@ -123,8 +122,8 @@ export default function SearchPage() {
                 onClick={() => setCuisine(cuisine === c ? null : c)}
                 className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
                   cuisine === c
-                    ? "bg-brand text-white"
-                    : "bg-white/10 text-white/70"
+                    ? "bg-olive text-paper"
+                    : "bg-paper-raised text-ink-soft ring-1 ring-line"
                 }`}
               >
                 {c}
@@ -135,13 +134,18 @@ export default function SearchPage() {
 
         {/* Body */}
         {results ? (
-          <ReelFeed
-            items={results}
-            emptyLabel={`No matches for "${submitted}". Try another craving.`}
-          />
+          <div className="h-full overflow-y-auto px-4 pb-24 pt-32">
+            {results.length === 0 ? (
+              <p className="pt-8 text-center text-sm text-ink-soft">
+                No matches for &quot;{submitted}&quot;. Try another craving.
+              </p>
+            ) : (
+              results.map((s) => <SpotCard key={s.restaurant.id} restaurant={s.restaurant} />)
+            )}
+          </div>
         ) : (
           <div className="h-full overflow-y-auto px-5 pb-24 pt-32">
-            <h2 className="text-sm font-semibold text-white/50">
+            <h2 className="font-display text-sm font-semibold text-ink-faint">
               Trending searches
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -152,42 +156,22 @@ export default function SearchPage() {
                     setQ(t);
                     setSubmitted(t);
                   }}
-                  className="rounded-full bg-white/5 px-4 py-2 text-sm text-white/85 ring-1 ring-white/10 active:scale-95"
+                  className="rounded-full bg-paper-raised px-4 py-2 text-sm text-ink-soft ring-1 ring-line active:scale-95"
                 >
                   {t}
                 </button>
               ))}
             </div>
 
-            <h2 className="mt-8 text-sm font-semibold text-white/50">
-              💎 Under the radar near you
+            <h2 className="font-display mt-8 text-sm font-semibold text-ink-faint">
+              <span className="text-olive">◆</span> Under the radar near you
             </h2>
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3">
               {[...RESTAURANTS]
                 .sort((a, b) => gemScore(b) - gemScore(a))
                 .slice(0, 6)
                 .map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => {
-                      setQ(r.name);
-                      setSubmitted(r.name);
-                    }}
-                    className="overflow-hidden rounded-2xl text-left ring-1 ring-white/10"
-                    style={{
-                      background: `linear-gradient(150deg, ${r.reels[0].gradient[0]}, ${r.reels[0].gradient[1]})`,
-                    }}
-                  >
-                    <div className="flex h-24 items-center justify-center text-4xl">
-                      {r.reels[0].emoji}
-                    </div>
-                    <div className="bg-black/40 p-2.5 backdrop-blur-sm">
-                      <div className="truncate text-sm font-bold">{r.name}</div>
-                      <div className="text-[11px] text-white/60">
-                        {r.cuisines[0]} · ⭐ {r.rating.toFixed(1)}
-                      </div>
-                    </div>
-                  </button>
+                  <SpotCard key={r.id} restaurant={r} />
                 ))}
             </div>
           </div>

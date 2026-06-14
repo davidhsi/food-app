@@ -111,7 +111,7 @@ async function askClaude(
 
   const leanUnderground = (profile.undergroundBias ?? 0.7) >= 0.5;
   const system =
-    "You are ReelEats' food concierge. ReelEats is about discovering UNDER-THE-RADAR spots before everyone else. " +
+    "You are Truffle's food concierge. Truffle is about discovering UNDER-THE-RADAR spots before everyone else. " +
     "From the candidate restaurants ONLY, pick the 3-4 best for the user's request and taste profile. " +
     (leanUnderground
       ? "Favor hidden gems (low `buzz`, high `gem`) over obvious tourist hotspots unless the user explicitly asks for famous/popular places. When you pick a gem, work its insiderTip into the reply. "

@@ -26,3 +26,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.superpowers/
+
+# Claude Code runtime locks
+.claude/scheduled_tasks.lock
