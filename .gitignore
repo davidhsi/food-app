@@ -30,3 +30,6 @@ next-env.d.ts
 
 # Claude Code runtime locks
 .claude/scheduled_tasks.lock
+
+# Ingest pipeline cache (regenerated on demand)
+scripts/.ingest-cache/
