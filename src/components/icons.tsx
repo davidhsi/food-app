@@ -2,7 +2,9 @@ import * as React from "react";
 
 type P = React.SVGProps<SVGSVGElement> & { filled?: boolean };
 
-const base = (props: P) => ({
+// Strip `filled` here so it never reaches the <svg> DOM node (React warns on
+// unknown boolean attributes). Each icon still reads p.filled for its fill.
+const base = ({ filled: _filled, ...props }: P) => ({
   width: 24,
   height: 24,
   viewBox: "0 0 24 24",
