@@ -13,13 +13,25 @@ The defensible wedge isn't another video feed or another star-rating clone; it's
 | Feature | Description |
 | --- | --- |
 | **Onboarding** | A quick taste quiz — cuisines, vibes, dietary, spice/adventurousness, **and a "hidden gems vs. hotspots" dial** — builds your taste profile. |
-| **For You feed** | An editorial discovery feed. Each card shows a **% match** badge, explainable **"why" chips**, and a **💎 Under the radar** badge on true gems. |
+| **Feed** | A calm, editorial discovery feed. Each card is intentionally minimal — hero photo, **gem score**, name, one metadata line, and a save — with the depth (the "why", insider tip, earliness) revealed on the detail page. Ends with a "you're all caught up" state, not an infinite scroll. |
+| **Help me decide** | Can't choose? One tap surfaces a single confident pick with a written reason — a deterministic concierge shortcut, **not** a slot machine. |
+| **Share a spot** | One tap shares a clean single-spot card to the group chat (Web Share API, clipboard fallback). |
 | **Search** | Search by dish, vibe, neighborhood, or plain English ("hole in the wall", "where locals eat", "hidden gems"). Underground-intent queries rank the whole city by gem score. |
 | **AI Concierge** | Chat in natural language and get matched gems with the **insider tip** worked in. **Claude**-powered when an API key is set (biased toward gems), with a deterministic local fallback. |
 | **Beli-style ranking** | Mark a place "been" and rank it through **pairwise comparisons** (binary-search insertion) → a personal 0–10 leaderboard. |
 | **Profile** | Your **Been** leaderboard, **Want to try** saves, liked spots, and editable taste profile. |
 
 Everything persists locally (Zustand + `localStorage`), and your likes / saves / rankings **feed back into the recommendation engine** — the more you use it, the better the feed gets.
+
+## 🎨 Design
+
+Truffle's look is **"Warm Editorial"** — calm and curated, deliberately *not* a loud doomscroll, casino, or dating-app swipe deck.
+
+- **Palette ("Garden"):** paper `#F4F1E8` · ink `#1d2014` · olive accent `#5c6b2e` · gem `#cfe08a`, defined as semantic tokens in `tailwind.config.ts` (no raw hex in components).
+- **Type:** Fraunces (display) + Inter (body), loaded via `next/font`.
+- **Principles:** one surface treatment (no glassmorphism), an SVG icon family (no emoji as UI), quiet motion that respects `prefers-reduced-motion`, and a visible end state instead of infinite supply.
+
+The design decisions and the feed-mechanic rationale are documented in `docs/superpowers/specs/2026-06-13-truffle-redesign-design.md`, with the build breakdown in `docs/superpowers/plans/2026-06-13-truffle-redesign.md`.
 
 ## 🧠 The recommendation engine
 
@@ -62,11 +74,11 @@ The UI is framed as a phone on desktop and goes full-screen on mobile widths.
 
 ### Deploy to a public URL (one click)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/davidhsi/food-app/tree/claude/restaurant-reels-mvp-gGpe4&project-name=truffle&repository-name=truffle)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/davidhsi/food-app&project-name=truffle&repository-name=truffle)
 
-The button clones this branch into a fresh repo and deploys it — **no env vars or database required** (the AI concierge falls back to the local engine). To enable the Claude-powered concierge, add `ANTHROPIC_API_KEY` in the Vercel project's *Settings → Environment Variables* and redeploy.
+The button clones the repo into a fresh project and deploys it — **no env vars or database required** (the AI concierge falls back to the local engine). To enable the Claude-powered concierge, add `ANTHROPIC_API_KEY` in the Vercel project's *Settings → Environment Variables* and redeploy.
 
-**Prefer to deploy your existing repo?** In the [Vercel dashboard](https://vercel.com/new): *Add New → Project → Import `davidhsi/food-app`*, set the Production Branch to `claude/restaurant-reels-mvp-gGpe4` (Settings → Git), and click **Deploy**. Next.js is auto-detected; no extra config needed.
+**Prefer to deploy your existing repo?** In the [Vercel dashboard](https://vercel.com/new): *Add New → Project → Import `davidhsi/food-app`* (Production Branch `main`), and click **Deploy**. Next.js is auto-detected; no extra config needed.
 
 ## 🗂️ Structure
 
@@ -74,23 +86,24 @@ The button clones this branch into a fresh repo and deploys it — **no env vars
 src/
   app/
     onboarding/        taste quiz
-    feed/              For You editorial feed
-    search/            search → discovery feed
+    feed/              editorial feed + "Help me decide"
+    search/            search → SpotCard results
     assistant/         AI concierge chat
     profile/           Been / Want-to-try / taste
-    restaurant/[id]/   detail + ranking
+    restaurant/[id]/   detail (the depth surface) + ranking
     api/assistant/     Claude (or local) recommender endpoint
-  components/          DiscoveryCard, DiscoveryFeed, ActionRail, RankModal, BottomNav…
+  components/          SpotCard, Feed, HelpMeDecide, ShareSpot,
+                       RankModal, BottomNav, AppShell, icons
   lib/
     recommend.ts       explainable scoring engine + NL query parser
     ranking.ts         Beli-style pairwise comparison ranking
     store.ts           Zustand store (persisted)
-    data.ts            mock restaurants + discovery cards
+    data.ts            mock restaurants + reel posters
 ```
 
 ## 📝 Notes & strategic direction
 
-This is an MVP with a curated mock dataset. Card posters use Unsplash and gracefully fall back to a cuisine-keyed gradient + emoji, so the UI always looks good — even offline.
+This is an MVP with a curated mock dataset. Card photos use Unsplash posters; when an image is unavailable a neutral placeholder surface is shown (the old gradient-and-emoji fallback was retired in the Warm Editorial redesign).
 
 The deliberate bet is **anti-mainstream discovery** rather than "another video feed." That reframes the go-to-market around problems that are actually tractable for a small team:
 
