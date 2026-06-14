@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import AppShell from "@/components/AppShell";
 import Feed from "@/components/Feed";
-// import HelpMeDecide from "@/components/HelpMeDecide"; // re-enabled in Task 9
+import HelpMeDecide from "@/components/HelpMeDecide";
 import { useStore } from "@/lib/store";
 import { recommend } from "@/lib/recommend";
 
@@ -31,7 +31,7 @@ export default function FeedPage() {
           </p>
         </header>
         <Feed restaurants={restaurants} />
-        {/* <HelpMeDecide />  // re-enabled in Task 9 */}
+        <HelpMeDecide />
       </div>
     </AppShell>
   );
