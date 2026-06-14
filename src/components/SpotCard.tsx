@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { gemScore, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { BookmarkIcon } from "./icons";
@@ -8,17 +8,15 @@ import { BookmarkIcon } from "./icons";
 const priceStr = (p: number) => "$".repeat(p);
 
 export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
-  const router = useRouter();
-  const saved = useStore((s) => s.saved);
   const toggleSave = useStore((s) => s.toggleSave);
-  const isSaved = saved.includes(r.id);
+  const isSaved = useStore((s) => s.saved.includes(r.id));
   const poster = r.reels[0]?.poster;
   const score = (gemScore(r) * 10).toFixed(1);
 
   return (
     <article className="relative mb-7 animate-floatUp">
-      <button
-        onClick={() => router.push(`/restaurant/${r.id}`)}
+      <Link
+        href={`/restaurant/${r.id}`}
         className="block w-full text-left"
       >
         <div className="relative h-52 overflow-hidden rounded-[20px] bg-line">
@@ -41,8 +39,9 @@ export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) 
           <span className="font-semibold text-olive">★ {r.rating.toFixed(1)}</span>{" "}
           · {r.cuisines.join(" · ")} · {priceStr(r.price)} · {r.neighborhood}
         </div>
-      </button>
+      </Link>
       <button
+        type="button"
         onClick={() => toggleSave(r.id)}
         aria-label={isSaved ? "Saved" : "Save to want to try"}
         className="absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-paper-raised/90 text-ink backdrop-blur-sm active:scale-90 transition-transform"
