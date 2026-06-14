@@ -39,8 +39,8 @@ function Chip({
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95 ${
         active
-          ? "bg-brand text-white ring-1 ring-brand"
-          : "bg-white/5 text-white/80 ring-1 ring-white/10 hover:bg-white/10"
+          ? "bg-olive text-paper ring-1 ring-olive"
+          : "bg-paper-raised text-ink-soft ring-1 ring-line hover:bg-line/40"
       }`}
     >
       {children}
@@ -123,12 +123,12 @@ export default function Onboarding() {
           <div>
             <div className="mb-2 flex justify-between text-sm">
               <span className="font-semibold">Hidden gems vs. hotspots</span>
-              <span className="text-white/60">
+              <span className="text-ink-soft">
                 {p.undergroundBias < 0.34
                   ? "Crowd favorites"
                   : p.undergroundBias < 0.7
                     ? "A mix"
-                    : "Underground only 💎"}
+                    : "Underground only"}
               </span>
             </div>
             <input
@@ -139,16 +139,16 @@ export default function Onboarding() {
               onChange={(e) =>
                 setP({ ...p, undergroundBias: Number(e.target.value) / 100 })
               }
-              className="w-full accent-brand"
+              className="w-full accent-olive"
             />
-            <p className="mt-1 text-xs text-white/40">
+            <p className="mt-1 text-xs text-ink-faint">
               How hard should we dig for spots the crowds haven&apos;t found yet?
             </p>
           </div>
           <div>
             <div className="mb-2 flex justify-between text-sm">
               <span className="font-semibold">Spice tolerance</span>
-              <span className="text-white/60">
+              <span className="text-ink-soft">
                 {["Mild", "Medium", "Hot", "Inferno"][p.spiceTolerance]}
               </span>
             </div>
@@ -160,13 +160,13 @@ export default function Onboarding() {
               onChange={(e) =>
                 setP({ ...p, spiceTolerance: Number(e.target.value) })
               }
-              className="w-full accent-brand"
+              className="w-full accent-olive"
             />
           </div>
           <div>
             <div className="mb-2 flex justify-between text-sm">
               <span className="font-semibold">Adventurousness</span>
-              <span className="text-white/60">
+              <span className="text-ink-soft">
                 {p.adventurousness < 0.34
                   ? "Comfort zone"
                   : p.adventurousness < 0.67
@@ -182,7 +182,7 @@ export default function Onboarding() {
               onChange={(e) =>
                 setP({ ...p, adventurousness: Number(e.target.value) / 100 })
               }
-              className="w-full accent-brand"
+              className="w-full accent-olive"
             />
           </div>
           <div>
@@ -212,10 +212,10 @@ export default function Onboarding() {
       <div className="flex-1 overflow-y-auto px-6 pt-10">
         {step === 0 && (
           <div className="mb-8 animate-floatUp">
-            <div className="text-3xl font-black tracking-tight">
-              Reel<span className="text-brand">Eats</span>
+            <div className="font-display text-3xl font-semibold tracking-tight">
+              Truffle<span className="text-olive">.</span>
             </div>
-            <p className="mt-1 text-sm text-white/55">
+            <p className="mt-1 text-sm text-ink-soft">
               Find the underground spots before everyone else — ranked for your
               taste.
             </p>
@@ -227,23 +227,23 @@ export default function Onboarding() {
             <div
               key={i}
               className={`h-1 flex-1 rounded-full ${
-                i <= step ? "bg-brand" : "bg-white/15"
+                i <= step ? "bg-olive" : "bg-line"
               }`}
             />
           ))}
         </div>
 
-        <h1 className="text-2xl font-bold">{cur.title}</h1>
-        <p className="mt-1 text-sm text-white/55">{cur.subtitle}</p>
+        <h1 className="text-2xl font-semibold">{cur.title}</h1>
+        <p className="mt-1 text-sm text-ink-soft">{cur.subtitle}</p>
         <div className="mt-6">{cur.body}</div>
       </div>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="border-t border-line p-4">
         <div className="flex items-center gap-3">
           {step > 0 && (
             <button
               onClick={() => setStep(step - 1)}
-              className="rounded-full px-4 py-3 text-sm font-semibold text-white/70"
+              className="rounded-full px-4 py-3 text-sm font-semibold text-ink-soft"
             >
               Back
             </button>
@@ -255,7 +255,7 @@ export default function Onboarding() {
                 router.replace("/feed");
               } else setStep(step + 1);
             }}
-            className="flex-1 rounded-full bg-brand py-3.5 text-center text-sm font-bold text-white shadow-lg shadow-brand/30 transition active:scale-[0.98]"
+            className="flex-1 rounded-full bg-olive py-3.5 text-center text-sm font-bold text-paper transition active:scale-[0.98]"
           >
             {isLast ? "Start exploring" : "Continue"}
           </button>
@@ -266,7 +266,7 @@ export default function Onboarding() {
               complete(p);
               router.replace("/feed");
             }}
-            className="mt-2 w-full text-center text-xs text-white/40"
+            className="mt-2 w-full text-center text-xs text-ink-faint"
           >
             Skip for now
           </button>
