@@ -2,11 +2,10 @@
 
 import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
-import ReelFeed from "@/components/ReelFeed";
+import SpotCard from "@/components/SpotCard";
 import { SearchIcon } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
-import { toFeedItems } from "@/lib/feed";
 import { useStore } from "@/lib/store";
 import { gemScore, Restaurant } from "@/lib/types";
 
@@ -72,7 +71,7 @@ export default function SearchPage() {
       },
       pool,
     );
-    return toFeedItems(scored);
+    return scored;
   }, [submitted, cuisine, store.profile, store.liked, store.saved, store.ranked]);
 
   return (
@@ -135,10 +134,15 @@ export default function SearchPage() {
 
         {/* Body */}
         {results ? (
-          <ReelFeed
-            items={results}
-            emptyLabel={`No matches for "${submitted}". Try another craving.`}
-          />
+          <div className="h-full overflow-y-auto px-4 pb-24 pt-32">
+            {results.length === 0 ? (
+              <p className="pt-8 text-center text-sm text-white/50">
+                No matches for &quot;{submitted}&quot;. Try another craving.
+              </p>
+            ) : (
+              results.map((s) => <SpotCard key={s.restaurant.id} restaurant={s.restaurant} />)
+            )}
+          </div>
         ) : (
           <div className="h-full overflow-y-auto px-5 pb-24 pt-32">
             <h2 className="text-sm font-semibold text-white/50">
