@@ -6,7 +6,7 @@ import Image from "next/image";
 import AppShell from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
-import { StarIcon } from "@/components/icons";
+import { StarIcon, XIcon } from "@/components/icons";
 
 function scoreColor(s: number) {
   if (s >= 8.5) return "text-olive";
@@ -101,7 +101,7 @@ export default function ProfilePage() {
             (beenSorted.length === 0 ? (
               <Empty
                 title="No rankings yet"
-                body="Tap the + on any reel to rank a spot you've been to. We'll build your personal leaderboard."
+                body="Tap the + on any spot to rank a spot you've been to. We'll build your personal leaderboard."
               />
             ) : (
               <ol className="space-y-2">
@@ -151,8 +151,9 @@ export default function ProfilePage() {
                             removeRanked(r.id);
                           }}
                           className="px-1 text-ink-faint hover:text-ink-soft"
+                          aria-label="Remove"
                         >
-                          ✕
+                          <XIcon width={14} height={14} />
                         </button>
                       </Link>
                     </li>
@@ -165,7 +166,7 @@ export default function ProfilePage() {
             (saved.length === 0 ? (
               <Empty
                 title="Nothing saved yet"
-                body="Tap the bookmark on a reel to save places you want to try."
+                body="Tap the bookmark on a card to save places you want to try."
               />
             ) : (
               <div className="space-y-2">
