@@ -1,0 +1,68 @@
+[
+  {
+    "id": "ramen-koba-00001",
+    "name": "Ramen Koba",
+    "cuisines": [
+      "Japanese"
+    ],
+    "price": 2,
+    "rating": 9.4,
+    "popularity": 0,
+    "buzz": 0,
+    "insiderTip": "Go on a weekday — quieter, and the kitchen has more time for you.",
+    "neighborhood": "Avondale",
+    "city": "Chicago",
+    "lat": 41.929,
+    "lng": -87.7,
+    "distanceKm": 8.4,
+    "vibes": [
+      "casual",
+      "cozy"
+    ],
+    "dietary": [],
+    "spice": 0,
+    "tags": [
+      "japanese"
+    ],
+    "signatureDishes": [],
+    "blurb": "A Japanese spot in the neighborhood — $$, rated 9.4 by locals.",
+    "reels": [
+      {
+        "poster": "/api/photo?ref=places%2FChIJsampleRAMENkoba00001%2Fphotos%2FSAMPLEPHOTOREF1"
+      }
+    ]
+  },
+  {
+    "id": "taqueria-el-milagro-a0002",
+    "name": "Taqueria El Milagro",
+    "cuisines": [
+      "Mexican"
+    ],
+    "price": 1,
+    "rating": 9,
+    "popularity": 1,
+    "buzz": 1,
+    "insiderTip": "Go on a weekday — quieter, and the kitchen has more time for you.",
+    "neighborhood": "Pilsen",
+    "city": "Chicago",
+    "lat": 41.857,
+    "lng": -87.655,
+    "distanceKm": 3.4,
+    "vibes": [
+      "casual",
+      "cozy"
+    ],
+    "dietary": [],
+    "spice": 2,
+    "tags": [
+      "mexican"
+    ],
+    "signatureDishes": [],
+    "blurb": "A Mexican spot in the neighborhood — $, rated 9.0 by locals.",
+    "reels": [
+      {
+        "poster": "/api/photo?ref=places%2FChIJsampleTAQUERIA0002%2Fphotos%2FSAMPLEPHOTOREF2"
+      }
+    ]
+  }
+]
