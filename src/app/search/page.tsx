@@ -136,7 +136,7 @@ export default function SearchPage() {
         {results ? (
           <div className="h-full overflow-y-auto px-4 pb-24 pt-32">
             {results.length === 0 ? (
-              <p className="pt-8 text-center text-sm text-white/50">
+              <p className="pt-8 text-center text-sm text-ink-soft">
                 No matches for &quot;{submitted}&quot;. Try another craving.
               </p>
             ) : (
