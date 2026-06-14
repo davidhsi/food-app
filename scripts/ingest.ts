@@ -88,7 +88,7 @@ async function main() {
   const restaurants: Restaurant[] = [];
   for (const { place, neighborhood } of kept) {
     const name = place.displayName?.text ?? "Unnamed";
-    const cuisines = cuisinesFromTypes(place.types, name);
+    const derivedCuisines = cuisinesFromTypes(place.types, name);
     const price = priceFrom(place.priceLevel);
     const rating = ratingFrom(place.rating);
     const reviewCount = place.userRatingCount ?? 0;
@@ -98,11 +98,12 @@ async function main() {
     let editorial = readCache<any>(place.id)?.editorial;
     if (!editorial) {
       editorial = await generateEditorial(
-        { name, cuisines, price, rating, reviewCount, reviewSnippets: reviewSnippets(place) },
+        { name, cuisines: derivedCuisines, price, rating, reviewCount, reviewSnippets: reviewSnippets(place) },
         anthropicKey,
       );
       writeCache(place.id, { editorial });
     }
+    const cuisines = editorial.cuisines?.length ? editorial.cuisines : derivedCuisines;
 
     const photoName = place.photos?.[0]?.name;
     const poster = photoName

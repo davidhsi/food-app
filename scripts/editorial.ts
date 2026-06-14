@@ -17,6 +17,7 @@ export interface Editorial {
   tags: string[];
   dietary: Dietary[];
   spice: number;
+  cuisines: Cuisine[];
 }
 
 const VIBES: Vibe[] = [
@@ -24,6 +25,11 @@ const VIBES: Vibe[] = [
   "date-night", "group-friendly", "outdoor", "quick-bite", "hidden-gem",
 ];
 const DIETARY: Dietary[] = ["vegetarian", "vegan", "gluten-free", "halal", "dairy-free"];
+const CUISINES: Cuisine[] = [
+  "Italian", "Japanese", "Mexican", "Thai", "Indian", "Chinese", "Korean",
+  "American", "French", "Mediterranean", "Vietnamese", "Spanish", "Ethiopian",
+  "African", "Vegan", "Seafood", "BBQ", "Dessert", "Cafe",
+];
 
 const priceStr = (p: Price) => "$".repeat(p);
 
@@ -48,6 +54,7 @@ function fallbackEditorial(input: EditorialInput): Editorial {
     tags: input.cuisines.map((c) => c.toLowerCase()),
     dietary: [],
     spice,
+    cuisines: input.cuisines,
   };
 }
 
@@ -73,6 +80,9 @@ function coerce(raw: any, input: EditorialInput): Editorial {
     : [];
   const spiceNum = Number(raw.spice);
   const spice = Number.isFinite(spiceNum) ? Math.max(0, Math.min(3, Math.round(spiceNum))) : fb.spice;
+  const cuisines = Array.isArray(raw.cuisines)
+    ? (raw.cuisines.filter((c: any) => CUISINES.includes(c)) as Cuisine[]).slice(0, 2)
+    : [];
   return {
     blurb: typeof raw.blurb === "string" && raw.blurb.trim() ? raw.blurb.trim() : fb.blurb,
     insiderTip:
@@ -88,6 +98,7 @@ function coerce(raw: any, input: EditorialInput): Editorial {
       : fb.tags,
     dietary,
     spice,
+    cuisines: cuisines.length ? cuisines : input.cuisines,
   };
 }
 
@@ -101,6 +112,7 @@ export async function generateEditorial(
     "You write Truffle's calm, in-the-know restaurant copy. Use ONLY the supplied facts and review snippets — never invent awards, prices, or claims. " +
     'Respond with STRICT JSON only: {"blurb": string (1 warm sentence), "insiderTip": string (1 specific how-to-order/when-to-go tip grounded in the reviews), ' +
     '"signatureDishes": string[] (0-4, only dishes named in the reviews), ' +
+    '"cuisines": string[] (1-2 from ' + JSON.stringify(CUISINES) + ' — the ACTUAL cuisine of the food served, judged from the reviews; correct the provided hint if it is wrong), ' +
     `"vibes": string[] (0-3 from ${JSON.stringify(VIBES)}), ` +
     `"dietary": string[] (0-3 from ${JSON.stringify(DIETARY)}), ` +
     '"tags": string[] (0-5 short descriptors), "spice": number (0-3 typical heat). No prose outside JSON.';

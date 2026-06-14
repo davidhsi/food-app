@@ -23,6 +23,9 @@ const run = async () => {
       "vibe in union: " + v,
     );
   }
+  assert.ok(Array.isArray(ed.cuisines) && ed.cuisines.length > 0, "cuisines non-empty");
+  // no-key fallback returns the hint cuisines unchanged
+  assert.deepEqual(ed.cuisines, ["Japanese"]);
   console.log("editorial.check ok");
 };
 run();
