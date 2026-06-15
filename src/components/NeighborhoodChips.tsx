@@ -49,7 +49,10 @@ export default function NeighborhoodChips() {
     <div className="no-scrollbar mb-1 flex gap-2 overflow-x-auto px-5 pb-1">
       {chip("Anywhere", neighborhood === null, () => setNeighborhood(null))}
       {NEIGHBORHOODS.map((n) =>
-        chip(n, neighborhood === n, () => setNeighborhood(n)),
+        // Tapping the active chip clears the steer back to "Anywhere".
+        chip(n, neighborhood === n, () =>
+          setNeighborhood(neighborhood === n ? null : n),
+        ),
       )}
     </div>
   );
