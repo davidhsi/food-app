@@ -6,6 +6,8 @@ import {
   ScoredRestaurant,
   TasteProfile,
 } from "./types";
+import { haversineKm } from "./geo";
+import { neighborhoodCentroid } from "./neighborhoods";
 
 /**
  * Content-based recommendation engine with explainable scoring.
@@ -22,6 +24,7 @@ export interface SignalState {
   saved: string[]; // restaurant ids saved to "want to try"
   ranked: RankedEntry[]; // been-to + score
   seen?: string[]; // already shown — gently down-rank
+  neighborhood?: string | null; // soft-steer the feed toward this area
 }
 
 const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
@@ -148,6 +151,22 @@ export function scoreRestaurant(
 
   // 9. Proximity nudge
   score += clamp(1 - r.distanceKm / 10) * 5;
+
+  // 9b. Neighborhood soft steer — lift the chosen area, and gently its
+  // neighbors, without filtering anything out. Exact match earns an
+  // explainable reason; a centroid-distance falloff keeps it a steer, not a
+  // wall. Never negative, so the feed never empties.
+  if (state.neighborhood) {
+    if (r.neighborhood === state.neighborhood) {
+      score += 18;
+      reasons.push({ label: `In ${state.neighborhood}`, weight: 18 });
+    }
+    const centroid = neighborhoodCentroid(state.neighborhood);
+    if (centroid) {
+      const km = haversineKm(centroid.lat, centroid.lng, r.lat, r.lng);
+      score += clamp(1 - km / 6) * 10;
+    }
+  }
 
   // 10. Novelty / already-seen damping
   if (state.seen?.includes(r.id)) score -= 12;

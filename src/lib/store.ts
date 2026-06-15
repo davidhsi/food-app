@@ -23,12 +23,15 @@ interface AppState {
   saved: string[]; // "want to try"
   ranked: RankedEntry[]; // "been", sorted desc by score
   seen: string[];
+  neighborhood: string | null; // null = "Anywhere" (no steer)
+  neighborhoodTouched: boolean; // true once the user has chosen, incl. "Anywhere"
 
   completeOnboarding: (p: TasteProfile) => void;
   setProfile: (p: TasteProfile) => void;
   toggleLike: (id: string) => void;
   toggleSave: (id: string) => void;
   markSeen: (id: string) => void;
+  setNeighborhood: (name: string | null) => void;
   addRanked: (id: string, insertAt: number) => void;
   removeRanked: (id: string) => void;
   reset: () => void;
@@ -43,6 +46,8 @@ export const useStore = create<AppState>()(
       saved: [],
       ranked: [],
       seen: [],
+      neighborhood: null,
+      neighborhoodTouched: false,
 
       completeOnboarding: (p) => set({ profile: p, onboarded: true }),
       setProfile: (p) => set({ profile: p }),
@@ -66,6 +71,9 @@ export const useStore = create<AppState>()(
           s.seen.includes(id) ? s : { seen: [...s.seen, id].slice(-200) },
         ),
 
+      setNeighborhood: (name) =>
+        set({ neighborhood: name, neighborhoodTouched: true }),
+
       addRanked: (id, insertAt) =>
         set((s) => ({
           ranked: insertRanked(s.ranked, id, insertAt),
@@ -83,6 +91,8 @@ export const useStore = create<AppState>()(
           saved: [],
           ranked: [],
           seen: [],
+          neighborhood: null,
+          neighborhoodTouched: false,
         }),
     }),
     { name: "truffle-store" },
