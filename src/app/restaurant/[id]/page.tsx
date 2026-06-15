@@ -55,7 +55,10 @@ export default function RestaurantPage({
   const isGem = gemScore(r) >= 0.45;
 
   return (
-    <div className="phone-shell overflow-y-auto bg-paper pb-10">
+    <div className="phone-shell bg-paper">
+      {/* `.phone-shell` is `overflow:hidden`; scroll on an inner inset child
+          (same pattern as AppShell) so the detail content can scroll. */}
+      <div className="absolute inset-0 overflow-y-auto pb-10">
       {/* Hero */}
       <div className="relative h-[44%] min-h-[300px] bg-line">
         {poster && (
@@ -202,6 +205,8 @@ export default function RestaurantPage({
             </span>
           ))}
         </div>
+      </div>
+
       </div>
 
       {ranking && <RankModal restaurant={r} onClose={() => setRanking(false)} />}
