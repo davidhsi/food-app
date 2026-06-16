@@ -5,8 +5,9 @@ import {
   neighborhoodCentroid,
 } from "../src/lib/neighborhoods";
 
-// 9 neighborhoods, in sorted order.
-assert.strictEqual(NEIGHBORHOODS.length, 9, "expected 9 neighborhoods");
+// At least the 9 original neighborhoods (data-derived; a pulled area that
+// yields no qualifying spots simply won't appear), in sorted order.
+assert.ok(NEIGHBORHOODS.length >= 9, "expected at least 9 neighborhoods");
 assert.deepStrictEqual(
   [...NEIGHBORHOODS].sort(),
   NEIGHBORHOODS,

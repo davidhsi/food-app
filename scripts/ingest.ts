@@ -2,7 +2,7 @@ import "dotenv/config";
 import fs from "fs";
 import path from "path";
 import { Restaurant } from "../src/lib/types";
-import { NEIGHBORHOODS } from "./neighborhoods";
+import { NEIGHBORHOODS, neighborhoodQueries } from "./neighborhoods";
 import { RawPlace, searchText } from "./places";
 import {
   buildBuzzNormalizer,
@@ -59,9 +59,13 @@ async function main() {
   } else {
     if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY is required (or pass --sample)");
     for (const n of NEIGHBORHOODS) {
-      console.log(`Searching ${n.name}...`);
-      const places = await searchText(n.query, apiKey, PER_NEIGHBORHOOD);
-      for (const place of places) raw.push({ place, neighborhood: n.name });
+      // Generic query first so a spot found by both it and a cuisine probe is
+      // attributed to this neighborhood (dedupe keeps the first sighting).
+      for (const q of neighborhoodQueries(n)) {
+        console.log(`Searching ${n.name}: "${q}"`);
+        const places = await searchText(q, apiKey, PER_NEIGHBORHOOD);
+        for (const place of places) raw.push({ place, neighborhood: n.name });
+      }
     }
   }
 
