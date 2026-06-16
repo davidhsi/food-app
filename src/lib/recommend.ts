@@ -1,4 +1,4 @@
-import { RESTAURANTS } from "./data";
+import { RESTAURANTS, RESTAURANTS_BY_ID } from "./data";
 import {
   gemScore,
   RankedEntry,
@@ -36,8 +36,13 @@ const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
 
 const overlap = <T>(a: T[], b: T[]) => a.filter((x) => b.includes(x));
 
+type Affinity = {
+  cuisineWeight: Map<string, number>;
+  vibeWeight: Map<string, number>;
+};
+
 /** Build an implicit taste vector from interaction history. */
-function affinityFromHistory(state: SignalState) {
+function affinityFromHistory(state: SignalState): Affinity {
   const cuisineWeight = new Map<string, number>();
   const vibeWeight = new Map<string, number>();
 
@@ -49,7 +54,7 @@ function affinityFromHistory(state: SignalState) {
       vibeWeight.set(v, (vibeWeight.get(v) ?? 0) + w * 0.6);
   };
 
-  const byId = (id: string) => RESTAURANTS.find((r) => r.id === id);
+  const byId = (id: string) => RESTAURANTS_BY_ID.get(id);
   state.liked.forEach((id) => bump(byId(id), 1));
   state.saved.forEach((id) => bump(byId(id), 0.8));
   // Higher-ranked "been" spots teach us more about taste.
@@ -61,6 +66,10 @@ function affinityFromHistory(state: SignalState) {
 export function scoreRestaurant(
   r: Restaurant,
   state: SignalState,
+  // History affinity is identical for every restaurant in a single pass, so
+  // `recommend` computes it once and threads it in. Standalone callers (e.g. the
+  // detail page recomputing one spot's reasons) can omit it.
+  affinity: Affinity = affinityFromHistory(state),
 ): ScoredRestaurant {
   const { profile } = state;
   const reasons: ScoredRestaurant["reasons"] = [];
@@ -144,12 +153,12 @@ export function scoreRestaurant(
   if (bias >= 0.6 && r.buzz >= 0.8) score -= (bias - 0.5) * r.buzz * 16;
 
   // 8. Implicit affinity from history (content-based collaborative signal)
-  const { cuisineWeight, vibeWeight } = affinityFromHistory(state);
-  let affinity = 0;
-  for (const c of r.cuisines) affinity += cuisineWeight.get(c) ?? 0;
-  for (const v of r.vibes) affinity += vibeWeight.get(v) ?? 0;
-  if (affinity > 0) {
-    const w = Math.min(20, affinity * 6);
+  const { cuisineWeight, vibeWeight } = affinity;
+  let affinityScore = 0;
+  for (const c of r.cuisines) affinityScore += cuisineWeight.get(c) ?? 0;
+  for (const v of r.vibes) affinityScore += vibeWeight.get(v) ?? 0;
+  if (affinityScore > 0) {
+    const w = Math.min(20, affinityScore * 6);
     score += w;
     reasons.push({ label: `Similar to spots you loved`, weight: w });
   }
@@ -201,8 +210,9 @@ export function recommend(
   state: SignalState,
   pool: Restaurant[] = RESTAURANTS,
 ): ScoredRestaurant[] {
+  const affinity = affinityFromHistory(state);
   return pool
-    .map((r) => scoreRestaurant(r, state))
+    .map((r) => scoreRestaurant(r, state, affinity))
     .sort((a, b) => b.precise - a.precise);
 }
 

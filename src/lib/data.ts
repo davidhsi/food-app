@@ -8,8 +8,16 @@ import generated from "./restaurants.generated.json";
  */
 export const RESTAURANTS = generated as unknown as Restaurant[];
 
-export const getRestaurant = (id: string) =>
-  RESTAURANTS.find((r) => r.id === id);
+/**
+ * id → Restaurant index, built once. Lets `getRestaurant` and the recommender's
+ * affinity lookups be O(1) instead of an O(n) scan per id — meaningful now that
+ * the dataset is ~1.6k records and history lookups run inside scoring.
+ */
+export const RESTAURANTS_BY_ID: ReadonlyMap<string, Restaurant> = new Map(
+  RESTAURANTS.map((r) => [r.id, r]),
+);
+
+export const getRestaurant = (id: string) => RESTAURANTS_BY_ID.get(id);
 
 export const ALL_CUISINES: Cuisine[] = Array.from(
   new Set(RESTAURANTS.flatMap((r) => r.cuisines)),
