@@ -7,7 +7,7 @@ import {
   TasteProfile,
 } from "./types";
 import { haversineKm } from "./geo";
-import { neighborhoodCentroid } from "./neighborhoods";
+import { NEIGHBORHOODS, neighborhoodCentroid } from "./neighborhoods";
 
 /**
  * Content-based recommendation engine with explainable scoring.
@@ -25,6 +25,11 @@ export interface SignalState {
   ranked: RankedEntry[]; // been-to + score
   seen?: string[]; // already shown — gently down-rank
   neighborhood?: string | null; // soft-steer the feed toward this area
+  // When true, the user *explicitly* named the area (e.g. an assistant query
+  // "chinese in Lakeview"). Steer hard toward it instead of the gentle feed
+  // nudge — but still never empty the pool, so a thin area falls back to the
+  // closest nearby spots rather than nothing.
+  neighborhoodStrict?: boolean;
 }
 
 const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
@@ -157,14 +162,22 @@ export function scoreRestaurant(
   // explainable reason; a centroid-distance falloff keeps it a steer, not a
   // wall. Never negative, so the feed never empties.
   if (state.neighborhood) {
+    const strict = state.neighborhoodStrict ?? false;
     if (r.neighborhood === state.neighborhood) {
-      score += 18;
-      reasons.push({ label: `In ${state.neighborhood}`, weight: 18 });
+      const w = strict ? 40 : 18;
+      score += w;
+      reasons.push({ label: `In ${state.neighborhood}`, weight: w });
+    } else if (strict) {
+      // Explicitly-named area: demote out-of-area spots so the named
+      // neighborhood wins decisively, but only by a bounded amount — a far
+      // spot must be dramatically better to appear, yet the pool never empties
+      // (thin areas still surface the closest nearby, surfaced honestly above).
+      score -= 16;
     }
     const centroid = neighborhoodCentroid(state.neighborhood);
     if (centroid) {
       const km = haversineKm(centroid.lat, centroid.lng, r.lat, r.lng);
-      score += clamp(1 - km / 6) * 10;
+      score += clamp(1 - km / 6) * (strict ? 16 : 10);
     }
   }
 
@@ -196,10 +209,23 @@ export function recommend(
 /** Lightweight natural-language search used by the AI assistant fallback. */
 export function parseQuery(q: string): Partial<TasteProfile> & {
   keywords: string[];
+  neighborhood?: string;
 } {
   const text = q.toLowerCase();
   const keywords = text.split(/[^a-z]+/).filter(Boolean);
-  const profile: Partial<TasteProfile> & { keywords: string[] } = { keywords };
+  const profile: Partial<TasteProfile> & {
+    keywords: string[];
+    neighborhood?: string;
+  } = { keywords };
+
+  // Neighborhood mention — match against the real neighborhoods in the data.
+  // Longest name first so multi-word areas ("West Loop", "Logan Square") win
+  // over any shorter partial. Only names that exist in the dataset are matched,
+  // since a neighborhood we can't serve isn't worth steering toward.
+  const nbhd = [...NEIGHBORHOODS]
+    .sort((a, b) => b.length - a.length)
+    .find((n) => text.includes(n.toLowerCase()));
+  if (nbhd) profile.neighborhood = nbhd;
 
   const cuisineMap: Record<string, string> = {
     pizza: "Italian",

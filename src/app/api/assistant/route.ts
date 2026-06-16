@@ -40,18 +40,30 @@ export async function POST(req: NextRequest) {
     spiceTolerance: parsed.spiceTolerance ?? profile.spiceTolerance,
     undergroundBias: parsed.undergroundBias ?? profile.undergroundBias ?? 0.7,
   };
+  // If the user named a neighborhood ("chinese in Lakeview"), steer the
+  // candidate pool hard toward it so both the LLM and the local fallback pick
+  // from the right area instead of the city-wide best match.
+  const neighborhood = parsed.neighborhood ?? null;
   const localScored = recommend({
     profile: blended,
     liked: [],
     saved: [],
     ranked: [],
+    neighborhood,
+    neighborhoodStrict: !!neighborhood,
   }).slice(0, 8);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (apiKey) {
     try {
-      const result = await askClaude(apiKey, query, profile, localScored);
+      const result = await askClaude(
+        apiKey,
+        query,
+        profile,
+        localScored,
+        neighborhood,
+      );
       if (result) return NextResponse.json({ ...result, engine: "claude" });
     } catch (e) {
       // fall through to local engine on any error
@@ -61,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   // Local fallback
   const top = localScored.slice(0, 4);
-  const reply = composeLocalReply(query, top);
+  const reply = composeLocalReply(query, top, neighborhood);
   return NextResponse.json({
     reply,
     restaurantIds: top.map((s) => s.restaurant.id),
@@ -72,15 +84,24 @@ export async function POST(req: NextRequest) {
 function composeLocalReply(
   query: string,
   top: ReturnType<typeof recommend>,
+  neighborhood: string | null = null,
 ): string {
   if (top.length === 0)
     return "I couldn't find a great match for that — try a different craving or cuisine.";
   const first = top[0];
   const r = first.restaurant;
   const gem = gemScore(r) >= 0.55;
+  // Be honest when the named area is thin: say the pick is nearby, don't
+  // pretend it's in the requested neighborhood.
+  const inArea = !neighborhood || r.neighborhood === neighborhood;
+  const where = neighborhood
+    ? inArea
+      ? ` in ${neighborhood}`
+      : ` near ${neighborhood} (it's thin on this, so this is the closest I'd send you)`
+    : "";
   const lead = gem
-    ? `Off-the-radar pick: ${r.name}`
-    : `I'd start with ${r.name}`;
+    ? `Off-the-radar pick: ${r.name}${where}`
+    : `I'd start with ${r.name}${where}`;
   const tip = gem && r.insiderTip ? ` ${r.insiderTip}` : "";
   return `For "${query}", ${lead} — a ${first.score}% match for your taste.${tip} A few more lined up below.`;
 }
@@ -90,6 +111,7 @@ async function askClaude(
   query: string,
   profile: TasteProfile,
   candidates: ReturnType<typeof recommend>,
+  neighborhood: string | null = null,
 ) {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
   const compact = candidates.map((s) => ({
@@ -116,11 +138,15 @@ async function askClaude(
     (leanUnderground
       ? "Favor hidden gems (low `buzz`, high `gem`) over obvious tourist hotspots unless the user explicitly asks for famous/popular places. When you pick a gem, work its insiderTip into the reply. "
       : "") +
+    (neighborhood
+      ? `The user specifically asked for ${neighborhood}. Strongly prefer candidates whose neighborhood is "${neighborhood}". If few or none match, do NOT substitute another area silently — say plainly that ${neighborhood} is thin on this and offer the closest nearby spots from the candidates instead. `
+      : "") +
     'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
     "The reply is 1-2 warm, specific sentences (mention a dish or the insider tip). restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
 
   const userMsg =
     `User craving: "${query}"\n` +
+    (neighborhood ? `Requested neighborhood: ${neighborhood}\n` : "") +
     `Taste profile: ${JSON.stringify(profile)}\n` +
     `Candidates: ${JSON.stringify(compact)}`;
 

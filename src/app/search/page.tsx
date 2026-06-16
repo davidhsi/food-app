@@ -58,6 +58,11 @@ export default function SearchPage() {
       pool = merged.length ? merged : undergroundIntent ? pool : [];
     }
 
+    // If the query named an area ("chinese in Lakeview"), steer hard toward it
+    // so the named neighborhood's spots rank first instead of the city-wide
+    // best match — same behavior as the concierge.
+    const neighborhood = ("neighborhood" in parsed && parsed.neighborhood) || null;
+
     const scored = recommend(
       {
         profile: {
@@ -68,6 +73,8 @@ export default function SearchPage() {
         liked: store.liked,
         saved: store.saved,
         ranked: store.ranked,
+        neighborhood,
+        neighborhoodStrict: !!neighborhood,
       },
       pool,
     );
