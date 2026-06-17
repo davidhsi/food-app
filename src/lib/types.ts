@@ -63,7 +63,10 @@ export interface Restaurant {
   popularity: number; // 0..1 — how much in-app love it gets
   /** 0..1 mainstream awareness. Low buzz + high rating = a hidden gem. */
   buzz: number;
-  /** A regular's tip — how to order/visit like you're in on the secret. */
+  /**
+   * A regular's tip — how to order/visit like you're in on the secret.
+   * Detail-only (see `blurb`): stripped from the client `core` dataset.
+   */
   insiderTip?: string;
   neighborhood: string;
   city: string;
@@ -76,7 +79,12 @@ export interface Restaurant {
   spice: number; // 0..3 typical heat
   tags: string[];
   signatureDishes: string[];
-  blurb: string;
+  /**
+   * Editorial "about" copy. Detail-only — stripped from the client `core`
+   * dataset and served per-record from the server (see `data.server.ts`), so
+   * it's optional on records the client holds.
+   */
+  blurb?: string;
   reels: Reel[];
 }
 

@@ -15,6 +15,7 @@ import {
 } from "./derive";
 import { generateEditorial } from "./editorial";
 import { readCache, writeCache } from "./cache";
+import { writeCoreDataset } from "./split-data";
 
 const OUT = path.join(process.cwd(), "src", "lib", "restaurants.generated.json");
 const PER_NEIGHBORHOOD = 50;
@@ -141,6 +142,8 @@ async function main() {
   restaurants.sort((a, b) => b.rating * (1 - b.buzz) - a.rating * (1 - a.buzz));
   fs.writeFileSync(OUT, JSON.stringify(restaurants, null, 2) + "\n", "utf8");
   console.log(`Wrote ${restaurants.length} restaurants to ${OUT}`);
+  // Derive the client-safe core dataset (drops detail-only editorial fields).
+  writeCoreDataset(restaurants);
 }
 
 main().catch((e) => {
