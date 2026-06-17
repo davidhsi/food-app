@@ -8,6 +8,7 @@ import { scoreRestaurant } from "@/lib/recommend";
 import RankModal from "@/components/RankModal";
 import ShareSpot from "@/components/ShareSpot";
 import UserDistance from "@/components/UserDistance";
+import OrderGuide from "@/components/OrderGuide";
 import {
   BookmarkIcon,
   ChevronLeft,
@@ -155,6 +156,9 @@ export default function RestaurantDetail({
           </div>
         </div>
       )}
+
+      {/* What to order (taste-aware; instant local guide, Claude-upgraded) */}
+      <OrderGuide restaurant={r} />
 
       {/* Insider tip */}
       {r.insiderTip && (
