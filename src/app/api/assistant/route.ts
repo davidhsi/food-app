@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { RESTAURANTS } from "@/lib/data";
+import { RESTAURANTS_FULL } from "@/lib/data.server";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { gemScore, TasteProfile } from "@/lib/types";
 
@@ -44,14 +44,19 @@ export async function POST(req: NextRequest) {
   // candidate pool hard toward it so both the LLM and the local fallback pick
   // from the right area instead of the city-wide best match.
   const neighborhood = parsed.neighborhood ?? null;
-  const localScored = recommend({
-    profile: blended,
-    liked: [],
-    saved: [],
-    ranked: [],
-    neighborhood,
-    neighborhoodStrict: !!neighborhood,
-  }).slice(0, 8);
+  // Score against the FULL dataset so candidates carry the detail-only editorial
+  // (insiderTip/blurb) the reply and Claude prompt use — these aren't in `core`.
+  const localScored = recommend(
+    {
+      profile: blended,
+      liked: [],
+      saved: [],
+      ranked: [],
+      neighborhood,
+      neighborhoodStrict: !!neighborhood,
+    },
+    RESTAURANTS_FULL,
+  ).slice(0, 8);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -174,7 +179,7 @@ async function askClaude(
 
   // Validate ids against the real dataset.
   const valid = json.restaurantIds.filter((id: string) =>
-    RESTAURANTS.some((r) => r.id === id),
+    RESTAURANTS_FULL.some((r) => r.id === id),
   );
   if (!valid.length) return null;
   return { reply: String(json.reply ?? ""), restaurantIds: valid };
