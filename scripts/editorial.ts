@@ -1,4 +1,4 @@
-import { Cuisine, Dietary, Price, Vibe } from "../src/lib/types";
+import { Cuisine, Dietary, Price, TopDish, Vibe } from "../src/lib/types";
 
 export interface EditorialInput {
   name: string;
@@ -13,6 +13,8 @@ export interface Editorial {
   blurb: string;
   insiderTip: string;
   signatureDishes: string[];
+  /** Ranked (≤3) crowd favorites distilled from reviews; each ∈ signatureDishes. */
+  topDishes: TopDish[];
   vibes: Vibe[];
   tags: string[];
   dietary: Dietary[];
@@ -50,6 +52,7 @@ function fallbackEditorial(input: EditorialInput): Editorial {
     )}, rated ${input.rating.toFixed(1)} by locals.`,
     insiderTip: "Go on a weekday — quieter, and the kitchen has more time for you.",
     signatureDishes: [],
+    topDishes: [],
     vibes,
     tags: input.cuisines.map((c) => c.toLowerCase()),
     dietary: [],
@@ -69,7 +72,7 @@ function extractJson(text: string): any | null {
   }
 }
 
-function coerce(raw: any, input: EditorialInput): Editorial {
+export function coerce(raw: any, input: EditorialInput): Editorial {
   const fb = fallbackEditorial(input);
   if (!raw || typeof raw !== "object") return fb;
   const vibes = Array.isArray(raw.vibes)
@@ -83,15 +86,33 @@ function coerce(raw: any, input: EditorialInput): Editorial {
   const cuisines = Array.isArray(raw.cuisines)
     ? (raw.cuisines.filter((c: any) => CUISINES.includes(c)) as Cuisine[]).slice(0, 2)
     : [];
+  const signatureDishes: string[] = Array.isArray(raw.signatureDishes)
+    ? raw.signatureDishes.filter((s: any) => typeof s === "string").slice(0, 4)
+    : [];
+  // topDishes must be a ranked subset of signatureDishes — drop anything invented.
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const allowed = new Map(signatureDishes.map((d) => [norm(d), d]));
+  const seen = new Set<string>();
+  const topDishes: TopDish[] = Array.isArray(raw.topDishes)
+    ? (raw.topDishes as any[])
+        .map((t) => {
+          const canonical = typeof t?.dish === "string" ? allowed.get(norm(t.dish)) : undefined;
+          if (!canonical || seen.has(canonical)) return null;
+          seen.add(canonical);
+          const note = typeof t?.note === "string" && t.note.trim() ? t.note.trim() : undefined;
+          return note ? { dish: canonical, note } : { dish: canonical };
+        })
+        .filter((t): t is TopDish => t !== null)
+        .slice(0, 3)
+    : [];
   return {
     blurb: typeof raw.blurb === "string" && raw.blurb.trim() ? raw.blurb.trim() : fb.blurb,
     insiderTip:
       typeof raw.insiderTip === "string" && raw.insiderTip.trim()
         ? raw.insiderTip.trim()
         : fb.insiderTip,
-    signatureDishes: Array.isArray(raw.signatureDishes)
-      ? raw.signatureDishes.filter((s: any) => typeof s === "string").slice(0, 4)
-      : [],
+    signatureDishes,
+    topDishes,
     vibes: vibes.length ? vibes : fb.vibes,
     tags: Array.isArray(raw.tags)
       ? raw.tags.filter((s: any) => typeof s === "string").slice(0, 5)
@@ -112,6 +133,7 @@ export async function generateEditorial(
     "You write Truffle's calm, in-the-know restaurant copy. Use ONLY the supplied facts and review snippets — never invent awards, prices, or claims. " +
     'Respond with STRICT JSON only: {"blurb": string (1 warm sentence), "insiderTip": string (1 specific how-to-order/when-to-go tip grounded in the reviews), ' +
     '"signatureDishes": string[] (0-4, only dishes named in the reviews), ' +
+    '"topDishes": [{"dish": string, "note": string}] (0-3, the dishes reviewers rave about MOST, best first; each `dish` MUST be copied verbatim from signatureDishes; `note` is a short phrase grounded in the reviews, never invented), ' +
     '"cuisines": string[] (1-2 from ' + JSON.stringify(CUISINES) + ' — the ACTUAL cuisine of the food served, judged from the reviews; correct the provided hint if it is wrong), ' +
     `"vibes": string[] (0-3 from ${JSON.stringify(VIBES)}), ` +
     `"dietary": string[] (0-3 from ${JSON.stringify(DIETARY)}), ` +

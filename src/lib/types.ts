@@ -56,6 +56,12 @@ export type Allergen =
   | "shellfish"
   | "sesame";
 
+/** A crowd-favorite dish for a restaurant, derived editorially from reviews. */
+export interface TopDish {
+  dish: string; // must be one of the restaurant's signatureDishes
+  note?: string; // short, review-grounded reason people order it
+}
+
 export interface Reel {
   id?: string;
   /** Optional looping mp4. If absent we render an animated photo poster. */
@@ -96,6 +102,14 @@ export interface Restaurant {
   tags: string[];
   signatureDishes: string[];
   /**
+   * Editorial "crowd favorite" dishes — a ranked (most-loved first, ≤3) subset of
+   * `signatureDishes`, distilled at ingest from what reviewers mention most, each
+   * with a short review-grounded `note`. Optional: absent until a keyed `npm run
+   * ingest` populates it, and the UI hides the section when it's missing. Small +
+   * display-facing, so it stays in the client `core` dataset (unlike insiderTip/blurb).
+   */
+  topDishes?: TopDish[];
+  /**
    * Editorial "about" copy. Detail-only — stripped from the client `core`
    * dataset and served per-record from the server (see `data.server.ts`), so
    * it's optional on records the client holds.
@@ -132,6 +146,13 @@ export type ListType = "been" | "want";
 export interface RankedEntry {
   restaurantId: string;
   score: number; // 0..10 derived from comparison position
+  ts: number;
+}
+
+/** A user's personal ranking of one dish at one restaurant (local-only). */
+export interface DishRank {
+  dish: string;
+  score: number; // 0..10 derived from comparison position, same as RankedEntry
   ts: number;
 }
 

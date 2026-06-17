@@ -1,4 +1,4 @@
-import { RankedEntry } from "./types";
+import { DishRank, RankedEntry } from "./types";
 
 /**
  * Beli-style ranking: instead of asking for a number, we insert a new spot via
@@ -20,7 +20,7 @@ export interface RankingSession {
 /** Start inserting `candidateId` into a list already sorted by score desc. */
 export function startRanking(
   candidateId: string,
-  sortedDesc: RankedEntry[],
+  sortedDesc: readonly unknown[],
 ): RankingSession {
   if (sortedDesc.length === 0) {
     return { candidateId, lo: 0, hi: 0, pivot: -1, done: true, insertAt: 0 };
@@ -53,7 +53,7 @@ export function recordComparison(
 }
 
 /** Re-derive evenly spread 0..10 scores from final ordering. */
-export function rescore(sortedDesc: RankedEntry[]): RankedEntry[] {
+export function rescore<T extends { score: number }>(sortedDesc: T[]): T[] {
   const n = sortedDesc.length;
   if (n === 0) return [];
   if (n === 1) return [{ ...sortedDesc[0], score: 9.0 }];
@@ -71,5 +71,20 @@ export function insertRanked(
 ): RankedEntry[] {
   const next = sortedDesc.filter((e) => e.restaurantId !== candidateId);
   next.splice(insertAt, 0, { restaurantId: candidateId, score: 0, ts: Date.now() });
+  return rescore(next);
+}
+
+/**
+ * Dish variant of `insertRanked`, keyed by dish name instead of restaurantId.
+ * Reuses the same even-spread `rescore` math so personal dish ranking feels like
+ * restaurant ranking. `rescore`'s `{ ...e }` spread preserves the `dish` field.
+ */
+export function insertDishRank(
+  sortedDesc: DishRank[],
+  dish: string,
+  insertAt: number,
+): DishRank[] {
+  const next = sortedDesc.filter((e) => e.dish !== dish);
+  next.splice(insertAt, 0, { dish, score: 0, ts: Date.now() });
   return rescore(next);
 }
