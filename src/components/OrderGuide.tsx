@@ -65,6 +65,11 @@ export default function OrderGuide({ restaurant: r }: { restaurant: Restaurant }
             >
               <div className="text-sm font-semibold text-ink">{p.dish}</div>
               <div className="mt-0.5 text-xs text-ink-soft">{p.why}</div>
+              {p.cautions && p.cautions.length > 0 && (
+                <div className="mt-1.5 text-[11px] font-semibold text-olive-deep">
+                  ◷ May contain {p.cautions.join(", ")} — ask the kitchen.
+                </div>
+              )}
             </li>
           ))}
         </ul>
