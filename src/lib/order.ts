@@ -88,13 +88,16 @@ function cautionsFor(dishName: string, allergies: Allergen[]): Allergen[] {
   return allergies.filter((a) => flags.includes(a));
 }
 
-/** Why this dish might land for this eater, derived from the taste profile. */
-function whyForDish(r: Restaurant, profile: TasteProfile): string {
+/**
+ * A taste-based reason this dish suits the eater, or null when nothing specific
+ * applies (so callers can fall back to a review note before a generic line).
+ */
+function tasteWhy(r: Restaurant, profile: TasteProfile): string | null {
   const lovedCuisine = r.cuisines.find((c) => profile.cuisines.includes(c));
   if (lovedCuisine) return `right up your alley if you love ${lovedCuisine}`;
   if (r.spice >= 2 && profile.spiceTolerance >= 2) return "a good call if you like heat";
   if (profile.adventurousness >= 0.6) return "a little adventurous — worth a try";
-  return "a house signature";
+  return null;
 }
 
 /**
@@ -107,9 +110,15 @@ export function buildLocalOrderGuide(
   profile: TasteProfile,
 ): OrderGuide {
   const allergies = profile.allergies ?? [];
-  const picks: OrderPick[] = r.signatureDishes.slice(0, 3).map((dish) => {
+  // Prefer the editorial "crowd favorite" order when present (carrying each
+  // dish's review-grounded note), else the raw signature-dish order.
+  const source: { dish: string; note?: string }[] = r.topDishes?.length
+    ? r.topDishes.slice(0, 3)
+    : r.signatureDishes.slice(0, 3).map((dish) => ({ dish }));
+  const picks: OrderPick[] = source.map(({ dish, note }) => {
     const cautions = cautionsFor(dish, allergies);
-    return { dish, why: whyForDish(r, profile), ...(cautions.length ? { cautions } : {}) };
+    const why = tasteWhy(r, profile) ?? note ?? "a house signature";
+    return { dish, why, ...(cautions.length ? { cautions } : {}) };
   });
 
   const intro = r.insiderTip

@@ -134,6 +134,7 @@ async function main() {
       spice: editorial.spice,
       tags: editorial.tags,
       signatureDishes: editorial.signatureDishes,
+      topDishes: editorial.topDishes,
       blurb: editorial.blurb,
       reels: [{ poster }],
     });

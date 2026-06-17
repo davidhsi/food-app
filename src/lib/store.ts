@@ -2,8 +2,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { RankedEntry, TasteProfile } from "./types";
-import { insertRanked } from "./ranking";
+import { DishRank, RankedEntry, TasteProfile } from "./types";
+import { insertDishRank, insertRanked } from "./ranking";
 
 export const DEFAULT_PROFILE: TasteProfile = {
   cuisines: [],
@@ -26,6 +26,8 @@ interface AppState {
   seen: string[];
   neighborhood: string | null; // null = "Anywhere" (no steer)
   neighborhoodTouched: boolean; // true once the user has chosen, incl. "Anywhere"
+  // Personal, local-only dish rankings: restaurantId -> dishes ranked desc.
+  dishRanks: Record<string, DishRank[]>;
 
   completeOnboarding: (p: TasteProfile) => void;
   setProfile: (p: TasteProfile) => void;
@@ -35,6 +37,8 @@ interface AppState {
   setNeighborhood: (name: string | null) => void;
   addRanked: (id: string, insertAt: number) => void;
   removeRanked: (id: string) => void;
+  rankDish: (restaurantId: string, dish: string, insertAt: number) => void;
+  removeDishRank: (restaurantId: string, dish: string) => void;
   reset: () => void;
 }
 
@@ -49,6 +53,7 @@ export const useStore = create<AppState>()(
       seen: [],
       neighborhood: null,
       neighborhoodTouched: false,
+      dishRanks: {},
 
       completeOnboarding: (p) => set({ profile: p, onboarded: true }),
       setProfile: (p) => set({ profile: p }),
@@ -84,6 +89,28 @@ export const useStore = create<AppState>()(
       removeRanked: (id) =>
         set((s) => ({ ranked: s.ranked.filter((e) => e.restaurantId !== id) })),
 
+      rankDish: (restaurantId, dish, insertAt) =>
+        set((s) => {
+          const current = s.dishRanks[restaurantId] ?? [];
+          return {
+            dishRanks: {
+              ...s.dishRanks,
+              [restaurantId]: insertDishRank(current, dish, insertAt),
+            },
+          };
+        }),
+
+      removeDishRank: (restaurantId, dish) =>
+        set((s) => {
+          const current = s.dishRanks[restaurantId];
+          if (!current) return s;
+          const next = current.filter((e) => e.dish !== dish);
+          const dishRanks = { ...s.dishRanks };
+          if (next.length) dishRanks[restaurantId] = next;
+          else delete dishRanks[restaurantId];
+          return { dishRanks };
+        }),
+
       reset: () =>
         set({
           onboarded: false,
@@ -94,6 +121,7 @@ export const useStore = create<AppState>()(
           seen: [],
           neighborhood: null,
           neighborhoodTouched: false,
+          dishRanks: {},
         }),
     }),
     { name: "truffle-store" },

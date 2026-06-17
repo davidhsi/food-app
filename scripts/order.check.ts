@@ -80,4 +80,14 @@ const reply = orderGuideToReply("Test Thai", guide);
 assert.ok(reply.includes("Test Thai"));
 assert.ok(/may contain shellfish/.test(reply));
 
+// 6. topDishes (editorial crowd order) is preferred over raw signatureDishes order,
+//    and the review note fills in when there's no taste-based reason.
+const noTaste: TasteProfile = { ...baseProfile, cuisines: [], spiceTolerance: 0, adventurousness: 0, allergies: [] };
+const withTop = buildLocalOrderGuide(
+  { ...r, topDishes: [{ dish: "Green Curry", note: "fragrant and bright" }] },
+  noTaste,
+);
+assert.strictEqual(withTop.picks[0].dish, "Green Curry"); // promoted to first
+assert.strictEqual(withTop.picks[0].why, "fragrant and bright"); // note as the why
+
 console.log("order.check.ts: all assertions passed");
