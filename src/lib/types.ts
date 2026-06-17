@@ -40,6 +40,22 @@ export type Dietary =
   | "halal"
   | "dairy-free";
 
+/**
+ * Major food allergens (the US "big 9"). Distinct from `Dietary` preferences:
+ * these are safety-critical, so the ordering guide only ever surfaces them as
+ * "may contain — ask the kitchen" cautions, never as an authoritative all-clear.
+ */
+export type Allergen =
+  | "peanuts"
+  | "tree nuts"
+  | "milk"
+  | "eggs"
+  | "wheat"
+  | "soy"
+  | "fish"
+  | "shellfish"
+  | "sesame";
+
 export interface Reel {
   id?: string;
   /** Optional looping mp4. If absent we render an animated photo poster. */
@@ -99,6 +115,12 @@ export interface TasteProfile {
   price: Price[]; // acceptable price points
   vibes: Vibe[];
   dietary: Dietary[];
+  /**
+   * Allergens the user avoids. Optional so profiles persisted before this
+   * field existed still parse; read sites default to `[]`. Drives the ordering
+   * guide's per-dish "may contain" cautions only — never restaurant filtering.
+   */
+  allergies?: Allergen[];
   spiceTolerance: number; // 0..3
   adventurousness: number; // 0..1 — willingness to try unfamiliar cuisines
   /** 0..1 — preference for under-the-radar gems over the popular hotspots. */

@@ -22,13 +22,17 @@ export async function askClaudeOrder(
   profile: TasteProfile,
 ): Promise<OrderGuide | null> {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+  const allergies = profile.allergies ?? [];
 
   const system =
     "You are Truffle's ordering guide. The user is at (or considering) one restaurant and wants to know WHAT TO ORDER for their taste. " +
     "Pick 2-3 dishes ONLY from the provided `signatureDishes` list — never invent or substitute a dish that isn't in that list. " +
     "For each pick, give a short, warm reason it suits the taste profile (cuisine, spice, vibe). " +
     "Write a 1-sentence `intro` that sets up the order (use the insider tip if it helps). " +
-    'Respond with STRICT JSON: {"intro": string, "picks": [{"dish": string, "why": string}]}. ' +
+    (allergies.length
+      ? `The user avoids these allergens: ${allergies.join(", ")}. For each pick, set \`cautions\` to the subset of THOSE allergens the dish may plausibly contain (be conservative — flag if unsure). Only use values from the user's list. Never claim a dish is allergen-free; this is a "may contain, ask staff" hint. `
+      : "") +
+    'Respond with STRICT JSON: {"intro": string, "picks": [{"dish": string, "why": string, "cautions": string[]}]}. ' +
     "Each `dish` must match an entry in signatureDishes verbatim. No prose outside JSON.";
 
   const userMsg =
@@ -36,6 +40,7 @@ export async function askClaudeOrder(
     `Cuisines: ${r.cuisines.join(", ")}\n` +
     `Price: ${"$".repeat(r.price)}\n` +
     `signatureDishes: ${JSON.stringify(r.signatureDishes)}\n` +
+    (allergies.length ? `User avoids: ${JSON.stringify(allergies)}\n` : "") +
     (r.insiderTip ? `Insider tip: ${r.insiderTip}\n` : "") +
     (r.blurb ? `About: ${r.blurb}\n` : "") +
     `Taste profile: ${JSON.stringify(profile)}`;
@@ -61,7 +66,7 @@ export async function askClaudeOrder(
   const json = extractJson(text);
   if (!json) return null;
 
-  const picks = sanitizePicks(json.picks, r.signatureDishes);
+  const picks = sanitizePicks(json.picks, r.signatureDishes, allergies);
   if (!picks.length) return null; // nothing valid — let caller fall back
 
   const intro =

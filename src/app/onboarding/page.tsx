@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore, DEFAULT_PROFILE } from "@/lib/store";
 import { ALL_CUISINES } from "@/lib/data";
-import { Cuisine, Dietary, Price, TasteProfile, Vibe } from "@/lib/types";
+import { Allergen, Cuisine, Dietary, Price, TasteProfile, Vibe } from "@/lib/types";
 
 const VIBES: { v: Vibe; label: string }[] = [
   { v: "trendy", label: "Trendy" },
@@ -23,6 +23,18 @@ const DIETARY: { d: Dietary; label: string }[] = [
   { d: "gluten-free", label: "Gluten-free" },
   { d: "halal", label: "Halal" },
   { d: "dairy-free", label: "Dairy-free" },
+];
+
+const ALLERGENS: { a: Allergen; label: string }[] = [
+  { a: "peanuts", label: "Peanuts" },
+  { a: "tree nuts", label: "Tree nuts" },
+  { a: "milk", label: "Milk" },
+  { a: "eggs", label: "Eggs" },
+  { a: "wheat", label: "Wheat" },
+  { a: "soy", label: "Soy" },
+  { a: "fish", label: "Fish" },
+  { a: "shellfish", label: "Shellfish" },
+  { a: "sesame", label: "Sesame" },
 ];
 
 function Chip({
@@ -108,6 +120,24 @@ export default function Onboarding() {
               key={d}
               active={p.dietary.includes(d)}
               onClick={() => toggle<Dietary>("dietary", d)}
+            >
+              {label}
+            </Chip>
+          ))}
+        </div>
+      ),
+    },
+    {
+      title: "Any allergies?",
+      subtitle:
+        "We'll flag dishes that may contain these — always confirm with the kitchen.",
+      body: (
+        <div className="flex flex-wrap gap-2">
+          {ALLERGENS.map(({ a, label }) => (
+            <Chip
+              key={a}
+              active={(p.allergies ?? []).includes(a)}
+              onClick={() => toggle<Allergen>("allergies", a)}
             >
               {label}
             </Chip>

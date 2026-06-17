@@ -10,6 +10,7 @@ export const DEFAULT_PROFILE: TasteProfile = {
   price: [1, 2, 3],
   vibes: [],
   dietary: [],
+  allergies: [],
   spiceTolerance: 1,
   adventurousness: 0.5,
   // Default to leaning toward hidden gems — it's the product's whole point.
