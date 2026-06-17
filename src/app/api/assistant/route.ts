@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RESTAURANTS_FULL } from "@/lib/data.server";
 import { parseQuery, recommend } from "@/lib/recommend";
-import { gemScore, TasteProfile } from "@/lib/types";
+import { gemScore, Restaurant, TasteProfile } from "@/lib/types";
+import { buildLocalOrderGuide, orderGuideToReply } from "@/lib/order";
+import { askClaudeOrder } from "@/lib/order.server";
 
 export const runtime = "nodejs";
 
@@ -26,6 +28,35 @@ export async function POST(req: NextRequest) {
   const { query, profile } = body;
   if (!query?.trim()) {
     return NextResponse.json({ error: "empty query" }, { status: 400 });
+  }
+
+  // "What should I order at X?" — if the query is an ordering question and names
+  // a real restaurant, answer with a dish guide instead of recommending spots.
+  // Shares the same engine as the detail page's /api/order (see lib/order*).
+  if (isOrderIntent(query)) {
+    const named = findNamedRestaurant(query);
+    if (named) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      let guide = buildLocalOrderGuide(named, profile);
+      let engine = "local";
+      if (apiKey) {
+        try {
+          const upgraded = await askClaudeOrder(apiKey, named, profile);
+          if (upgraded) {
+            guide = upgraded;
+            engine = "claude";
+          }
+        } catch (e) {
+          console.error("Claude order guide failed, using local:", e);
+        }
+      }
+      return NextResponse.json({
+        reply: orderGuideToReply(named.name, guide),
+        restaurantIds: [named.id],
+        engine,
+      });
+    }
+    // No named restaurant matched — fall through to the normal recommend flow.
   }
 
   // Build a strong candidate pool with the local engine first.
@@ -183,6 +214,27 @@ async function askClaude(
   );
   if (!valid.length) return null;
   return { reply: String(json.reply ?? ""), restaurantIds: valid };
+}
+
+/** Does the query read like "what should I order / get / have"? */
+function isOrderIntent(query: string): boolean {
+  return /(what.*(to )?(order|get|have)|what'?s good|recommend.*dish|should i (order|get))/i.test(
+    query,
+  );
+}
+
+/**
+ * Find a restaurant the query names by matching its name as a substring.
+ * Longest name first so a multi-word spot wins over a shorter partial (same
+ * technique as parseQuery's neighborhood match). Short names are skipped to
+ * avoid trivial false positives.
+ */
+function findNamedRestaurant(query: string): Restaurant | undefined {
+  const text = query.toLowerCase();
+  return [...RESTAURANTS_FULL]
+    .filter((r) => r.name.length >= 4)
+    .sort((a, b) => b.name.length - a.name.length)
+    .find((r) => text.includes(r.name.toLowerCase()));
 }
 
 function extractJson(text: string): any | null {
