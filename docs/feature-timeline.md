@@ -6,6 +6,35 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-19 — Discovery & navigation UX
+
+A UI/UX pass over the discovery surfaces (presentation/glue/store only — the
+recommender, ranking, and ingest are unchanged). Rationale + rejected alternatives for
+the non-obvious calls: [`docs/decisions/2026-06-19-discovery-and-navigation-ux.md`](./decisions/2026-06-19-discovery-and-navigation-ux.md).
+
+- **Search never dead-ends + concierge bridge.** A query with no literal match now
+  falls back to taste-ranked picks under an honest "No exact matches — here's what we'd
+  recommend" header, and offers an "Ask the concierge about '…'" hand-off that
+  deep-links to `/assistant?q=…` (auto-asks once, then strips the param). Search and the
+  concierge stay two distinct tools (instant filter vs. conversation), not merged.
+- **"Near me" location awareness.** `parseQuery` detects near-me intent (shared across
+  search/concierge/API); a client-only `resolveNearbyNeighborhood()` maps geolocation →
+  nearest neighborhood centroid. Both surfaces steer to the user's area; graceful
+  city-wide fallback if denied. Neighborhood-level by design, not a GPS radius.
+- **State survives back-navigation.** Search inputs/results and the concierge
+  conversation moved into the store, kept **in-memory only** via a new `partialize`
+  (survive a back-button round-trip; reset on a fresh app open). Added
+  `src/lib/useScrollRestoration.ts` (feed/search/concierge/profile); the feed also
+  persists its "Show more" window so deep scrolls survive the round-trip.
+- **A11y & flow polish.** RankModal close button + Escape + `role="dialog"` +
+  background scroll-lock; aria labels on the gem-score badge & rating; 44px save target;
+  an elevated "you're all caught up" end-cap; "Link copied" share confirmation; capped
+  "Pick again" (not a roulette); chip clear affordance; concierge chat scroll/layout fix
+  (`min-h-0` + in-flow input); OG card now includes the insider tip.
+
+_Deferred:_ onboarding & shell a11y notes (parallel session); a unified
+loading/skeleton system (these surfaces have no async data loaders).
+
 ## 2026-06-19 — Launch hardening
 
 The operational/polish layer for a public launch (product features unchanged).
