@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import AppShell from "@/components/AppShell";
 import SpotCard from "@/components/SpotCard";
 import Link from "next/link";
@@ -35,11 +35,17 @@ function matches(r: Restaurant, q: string): boolean {
 
 export default function SearchPage() {
   const store = useStore();
-  const [q, setQ] = useState("");
-  const [submitted, setSubmitted] = useState("");
-  const [cuisine, setCuisine] = useState<string | null>(null);
-  // Resolved once via geolocation when a query asks for "near me"; reused after.
-  const [geoNbhd, setGeoNbhd] = useState<string | null>(null);
+  // Search inputs live in the store (not local state) so they survive
+  // navigating into a restaurant and back. Kept in-memory only (see the store's
+  // partialize), so a fresh app open still starts blank.
+  const q = store.searchQuery;
+  const submitted = store.searchSubmitted;
+  const cuisine = store.searchCuisine;
+  const geoNbhd = store.searchGeoNbhd; // resolved via geolocation for "near me"
+  const setQ = (v: string) => store.setSearch({ searchQuery: v });
+  const setSubmitted = (v: string) => store.setSearch({ searchSubmitted: v });
+  const setCuisine = (v: string | null) => store.setSearch({ searchCuisine: v });
+  const setGeoNbhd = (v: string | null) => store.setSearch({ searchGeoNbhd: v });
 
   // When a submitted query has "near me" intent, resolve the user's nearest
   // neighborhood so the result memo can steer toward it. Fail-silent: a denial

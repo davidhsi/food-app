@@ -10,13 +10,6 @@ import { resolveNearbyNeighborhood } from "@/lib/neighborhoods";
 import { parseQuery } from "@/lib/recommend";
 import { track } from "@/lib/analytics";
 
-interface Msg {
-  role: "user" | "assistant";
-  text: string;
-  restaurantIds?: string[];
-  engine?: string;
-}
-
 const SUGGESTIONS = [
   "Find me a hidden gem for dinner tonight",
   "An underground spot to impress a date",
@@ -26,7 +19,10 @@ const SUGGESTIONS = [
 
 export default function AssistantPage() {
   const profile = useStore((s) => s.profile);
-  const [messages, setMessages] = useState<Msg[]>([]);
+  // Conversation lives in the store so it survives navigating into a restaurant
+  // and back (in-memory only — a fresh app open starts empty).
+  const messages = useStore((s) => s.assistantMessages);
+  const setMessages = useStore((s) => s.setAssistantMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -101,6 +97,8 @@ export default function AssistantPage() {
     if (q && q.trim()) {
       didInit.current = true;
       send(q);
+      // Strip ?q so returning here (e.g. back from a restaurant) doesn't re-ask.
+      window.history.replaceState(null, "", "/assistant");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
