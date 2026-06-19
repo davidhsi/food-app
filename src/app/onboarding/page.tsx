@@ -254,19 +254,10 @@ export default function Onboarding() {
       <div className="flex-1 overflow-y-auto px-6 pt-10">
         {step === 0 && (
           <div className="mb-8 animate-floatUp">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/mascot-transparent.png"
-              alt=""
-              width={96}
-              height={96}
-              className="mb-3 h-24 w-24 select-none"
-              draggable={false}
-            />
-            <div className="font-display text-3xl font-semibold tracking-tight">
+            <div className="font-display text-4xl font-semibold tracking-tight">
               Truffle<span className="text-olive">.</span>
             </div>
-            <p className="mt-1 text-sm text-ink-soft">
+            <p className="mt-2 text-sm text-ink-soft">
               Find the underground spots before everyone else — ranked for your
               taste.
             </p>
