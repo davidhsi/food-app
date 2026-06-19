@@ -39,6 +39,26 @@ export interface OrderGuide {
 const PRICE_WORD = ["", "easygoing", "mid-range", "a splurge", "a special-occasion"];
 
 /**
+ * Pick one phrasing from a pool using a string seed (e.g. a restaurant or dish
+ * id). **Deterministic, not random** — the same spot always renders the same
+ * line, so this is calm variation across a page, never a slot-machine reshuffle
+ * on every view (CLAUDE.md: no slot-machine mechanics). Lets both chat engines
+ * avoid repeating one sentence verbatim down a list.
+ */
+export function seededPick<T>(pool: T[], seed: string): T {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+  return pool[Math.abs(h) % pool.length];
+}
+
+/** Join a list as natural prose: "A", "A and B", "A, B, and C". */
+function joinAnd(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+/**
  * Dish-name keywords that hint at each allergen. Deliberately conservative and
  * obvious (only what's plausibly in the *name*): this is a request-time cue, not
  * an ingredient database. It can only ever ADD a "may contain" caution — it
@@ -94,12 +114,48 @@ function cautionsFor(dishName: string, allergies: Allergen[]): Allergen[] {
  * A taste-based reason this dish suits the eater, or null when nothing specific
  * applies (so callers can fall back to a review note before a generic line).
  */
-function tasteWhy(r: Restaurant, profile: TasteProfile): string | null {
+function tasteWhy(
+  r: Restaurant,
+  profile: TasteProfile,
+  seed: string,
+): string | null {
   const lovedCuisine = r.cuisines.find((c) => profile.cuisines.includes(c));
-  if (lovedCuisine) return `right up your alley if you love ${lovedCuisine}`;
-  if (r.spice >= 2 && profile.spiceTolerance >= 2) return "a good call if you like heat";
-  if (profile.adventurousness >= 0.6) return "a little adventurous — worth a try";
+  if (lovedCuisine)
+    return seededPick(
+      [
+        `right up your alley if you love ${lovedCuisine}`,
+        `an easy yes for a ${lovedCuisine} fan`,
+        `exactly the ${lovedCuisine} you came for`,
+      ],
+      seed,
+    );
+  if (r.spice >= 2 && profile.spiceTolerance >= 2)
+    return seededPick(
+      [
+        "a good call if you like heat",
+        "one to get if you run toward the spice",
+        "it brings the heat you're after",
+      ],
+      seed,
+    );
+  if (profile.adventurousness >= 0.6)
+    return seededPick(
+      [
+        "a little adventurous, but worth it",
+        "the off-the-beaten-path pick here",
+        "a bit of a leap, but a good one",
+      ],
+      seed,
+    );
   return null;
+}
+
+/** Neutral fallback reason — varied, but never implying crowd data we lack. */
+function houseReason(seed: string): string {
+  return seededPick(
+    ["a house signature", "a safe bet here", "a standby on this menu"],
+    seed,
+  );
 }
 
 /**
@@ -119,7 +175,9 @@ export function buildLocalOrderGuide(
     : r.signatureDishes.slice(0, 3).map((dish) => ({ dish }));
   const picks: OrderPick[] = source.map(({ dish, note }) => {
     const cautions = cautionsFor(dish, allergies);
-    const why = tasteWhy(r, profile) ?? "a house signature";
+    // Seed per dish so the three picks for one spot don't all read identically.
+    const seed = `${r.id}:${dish}`;
+    const why = tasteWhy(r, profile, seed) ?? houseReason(seed);
     return {
       dish,
       why,
@@ -128,10 +186,18 @@ export function buildLocalOrderGuide(
     };
   });
 
+  const priced = `${PRICE_WORD[r.price] ?? "great"} ${r.cuisines[0] ?? "neighborhood"}`;
   const intro = r.insiderTip
     ? r.insiderTip
     : picks.length
-      ? `A ${PRICE_WORD[r.price] ?? "great"} ${r.cuisines[0] ?? "neighborhood"} spot — here's where I'd start.`
+      ? seededPick(
+          [
+            `A ${priced} spot — here's where I'd start.`,
+            `A ${priced} spot; a couple of things stand out.`,
+            `For a ${priced} spot, these are the ones to get.`,
+          ],
+          r.id,
+        )
       : "Ask about today's standout — this spot keeps it seasonal.";
 
   return { intro, picks };
@@ -167,7 +233,7 @@ export function sanitizePicks(
     );
     out.push({
       dish: canonical, // use our spelling, not the model's
-      why: typeof p?.why === "string" && p.why.trim() ? p.why.trim() : "a house signature",
+      why: typeof p?.why === "string" && p.why.trim() ? p.why.trim() : houseReason(canonical),
       ...(cautions.length ? { cautions } : {}),
     });
   }
@@ -185,17 +251,39 @@ export function orderGuideToReply(name: string, guide: OrderGuide): string {
     return `At ${name}, ${guide.intro.charAt(0).toLowerCase()}${guide.intro.slice(1)}`;
   }
   const [first, ...rest] = guide.picks;
-  const lead = `At ${name}, start with the ${first.dish} — ${first.why}.`;
+  // Vary the opener so a page of "what to order" replies doesn't all start the
+  // same way; seeded on the name, so a given spot always reads the same.
+  const lead = seededPick(
+    [
+      `At ${name}, start with the ${first.dish} — ${first.why}.`,
+      `At ${name}, the ${first.dish} is where I'd begin — ${first.why}.`,
+      `Get the ${first.dish} at ${name} — ${first.why}.`,
+    ],
+    name,
+  );
+  const restDishes = joinAnd(rest.map((p) => p.dish));
   const more = rest.length
-    ? ` Also great: ${rest.map((p) => p.dish).join(" and ")}.`
+    ? seededPick(
+        [
+          ` Also great: ${restDishes}.`,
+          ` Add the ${restDishes} if you're sharing.`,
+          ` The ${restDishes} are worth a look too.`,
+        ],
+        name,
+      )
     : "";
-  // Surface any allergen cautions across the picks so the concierge reply is
-  // honest about safety without ever implying a dish is allergen-free.
-  const flagged = guide.picks.filter((p) => p.cautions?.length);
-  const caution = flagged.length
-    ? ` Heads up: ${flagged
-        .map((p) => `the ${p.dish} may contain ${p.cautions!.join(", ")}`)
-        .join("; ")} — confirm with the kitchen.`
+  // Surface allergen cautions across the picks — grouped by allergen so we don't
+  // repeat "may contain" per dish — staying honest about safety without ever
+  // implying a dish is allergen-free.
+  const byAllergen = new Map<Allergen, string[]>();
+  for (const p of guide.picks)
+    for (const c of p.cautions ?? [])
+      byAllergen.set(c, [...(byAllergen.get(c) ?? []), p.dish]);
+  const clauses = Array.from(byAllergen, ([allergen, dishes]) =>
+    `the ${joinAnd(dishes)} might contain ${allergen}`,
+  );
+  const caution = clauses.length
+    ? ` Heads up: ${joinAnd(clauses)} — confirm with the kitchen.`
     : "";
   return lead + more + caution;
 }

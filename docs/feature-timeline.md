@@ -6,6 +6,28 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-19 — Chatbot voice naturalness
+
+A voice/presentation pass over both chatbot engines so the concierge and the "what to
+order" guide read like a friend who knows the city — and so a user can't tell the
+keyless fallback from the Claude upgrade. Recommendation engine, scoring, and ingest
+unchanged. Rationale + rejected alternatives:
+[`docs/decisions/2026-06-19-chatbot-voice-naturalness.md`](./decisions/2026-06-19-chatbot-voice-naturalness.md).
+
+- **Deterministic-seeded variation.** New `seededPick(pool, seed)` in `src/lib/order.ts`
+  (shared, pure) varies the `tasteWhy` reasons, `orderGuideToReply` openers, intro
+  fallback, and concierge `composeLocalReply` leads/closers — seeded by restaurant/dish
+  id so a given spot reads consistently while a list stops repeating one sentence
+  verbatim. Deterministic by design, **not** random (no slot-machine).
+- **Dropped the "% match" machine tell** from the local concierge reply; a qualitative
+  "strong fit" cue shows only when the score is high and the pick is in-area, else
+  nothing — never a number.
+- **Grouped allergen line** ("the X and Z might contain milk") instead of repeating "may
+  contain" per dish; "confirm with the kitchen" unchanged.
+- **Re-voiced both Claude prompts** (`askClaude`, `askClaudeOrder`) with shared voice
+  guidance, a voice example, and an explicit ban on machine tells; STRICT-JSON contract
+  and `sanitizePicks` validation untouched.
+
 ## 2026-06-19 — Discovery & navigation UX
 
 A UI/UX pass over the discovery surfaces (presentation/glue/store only — the
