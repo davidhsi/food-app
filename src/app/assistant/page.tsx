@@ -159,11 +159,6 @@ export default function AssistantPage() {
                 <div className="space-y-3">
                   <div className="max-w-[88%] rounded-2xl rounded-bl-md bg-paper-raised px-4 py-2.5 text-sm text-ink ring-1 ring-line">
                     {m.text}
-                    {m.engine && (
-                      <span className="ml-1 align-middle text-[10px] text-ink-faint">
-                        · {m.engine === "claude" ? "Claude" : "taste-engine"}
-                      </span>
-                    )}
                   </div>
                   {m.restaurantIds && m.restaurantIds.length > 0 && (
                     <div className="space-y-2">
