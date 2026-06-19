@@ -1,4 +1,4 @@
-import { Allergen, Restaurant, TasteProfile } from "./types";
+import { Allergen, Restaurant, TasteProfile, TopDish } from "./types";
 
 /**
  * "Ordering for you" — turn a restaurant's plain `signatureDishes` into a small,
@@ -20,6 +20,8 @@ export interface OrderPick {
   dish: string;
   /** A short, human reason this dish fits the user's taste. */
   why: string;
+  /** Crowd-derived "what reviewers love it for" note (from `topDishes`), if any. */
+  note?: string;
   /**
    * Allergens (from the user's own list) this dish *may* contain, inferred from
    * its name. A caution to verify with staff — never a guarantee either way:
@@ -117,8 +119,13 @@ export function buildLocalOrderGuide(
     : r.signatureDishes.slice(0, 3).map((dish) => ({ dish }));
   const picks: OrderPick[] = source.map(({ dish, note }) => {
     const cautions = cautionsFor(dish, allergies);
-    const why = tasteWhy(r, profile) ?? note ?? "a house signature";
-    return { dish, why, ...(cautions.length ? { cautions } : {}) };
+    const why = tasteWhy(r, profile) ?? "a house signature";
+    return {
+      dish,
+      why,
+      ...(note ? { note } : {}),
+      ...(cautions.length ? { cautions } : {}),
+    };
   });
 
   const intro = r.insiderTip
@@ -165,6 +172,11 @@ export function sanitizePicks(
     });
   }
   return out;
+}
+
+/** The crowd "loved for" note for a dish, from the restaurant's `topDishes`. */
+export function noteForDish(dish: string, topDishes?: TopDish[]): string | undefined {
+  return topDishes?.find((t) => t.dish === dish)?.note;
 }
 
 /** Fold a guide into a single warm chat sentence for the concierge reply. */

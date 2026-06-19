@@ -9,7 +9,6 @@ import RankModal from "@/components/RankModal";
 import ShareSpot from "@/components/ShareSpot";
 import UserDistance from "@/components/UserDistance";
 import OrderGuide from "@/components/OrderGuide";
-import DishRanker from "@/components/DishRanker";
 import {
   BookmarkIcon,
   ChevronLeft,
@@ -178,48 +177,6 @@ export default function RestaurantDetail({
           <p className="mt-1.5 text-sm leading-relaxed text-ink">{r.blurb}</p>
         </div>
       )}
-
-      {/* What reviewers love — editorial crowd favorites (hidden until ingested) */}
-      {r.topDishes && r.topDishes.length > 0 && (
-        <div className="px-5 pt-5">
-          <h2 className="text-sm font-semibold text-ink-faint">What reviewers love</h2>
-          <p className="mt-0.5 text-xs text-ink-faint">From what diners mention most.</p>
-          <ol className="mt-2 space-y-2">
-            {r.topDishes.map((t, i) => (
-              <li
-                key={t.dish}
-                className="flex items-start gap-3 rounded-2xl border border-line bg-paper-raised px-3.5 py-2.5"
-              >
-                <span className="text-sm font-semibold text-olive">{i + 1}</span>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-ink">{t.dish}</div>
-                  {t.note && (
-                    <div className="mt-0.5 text-xs text-ink-soft">{t.note}</div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      {/* Your picks here — local-only personal dish ranking */}
-      <DishRanker restaurant={r} />
-
-      {/* Signature dishes */}
-      <div className="px-5 pt-5">
-        <h2 className="text-sm font-semibold text-ink-faint">Signature dishes</h2>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {r.signatureDishes.map((d) => (
-            <span
-              key={d}
-              className="rounded-full bg-paper-raised px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-line"
-            >
-              {d}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {/* Known for */}
       <div className="px-5 pt-5">

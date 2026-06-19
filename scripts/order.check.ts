@@ -88,6 +88,7 @@ const withTop = buildLocalOrderGuide(
   noTaste,
 );
 assert.strictEqual(withTop.picks[0].dish, "Green Curry"); // promoted to first
-assert.strictEqual(withTop.picks[0].why, "fragrant and bright"); // note as the why
+assert.strictEqual(withTop.picks[0].note, "fragrant and bright"); // crowd note kept separate
+assert.strictEqual(withTop.picks[0].why, "a house signature"); // taste why not overridden by note
 
 console.log("order.check.ts: all assertions passed");
