@@ -6,6 +6,39 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-19 — Concierge conversation memory
+
+The `/assistant` concierge now carries conversation context, so refinements *compose*
+instead of resetting: "spicy thai" → "something cheaper" → "what about Pilsen?" narrows
+to cheap Thai in Pilsen rather than forgetting the Thai. The **server stays stateless**
+(no DB — consistent with the deferred-DB stance); memory is client-held and sent per
+request. Handoff + design:
+[`docs/superpowers/specs/2026-06-19-concierge-conversation-memory.md`](./superpowers/specs/2026-06-19-concierge-conversation-memory.md);
+merge-semantics rationale in
+[`docs/decisions/2026-06-19-concierge-conversation-memory.md`](./decisions/2026-06-19-concierge-conversation-memory.md).
+
+- **Client sends a bounded history.** `assistant/page.tsx`'s `send()` builds `history`
+  from the store's recent `assistantMessages` (last 6, mapped to `{role, text}`, dropping
+  `restaurantIds`/`engine`) and adds it to the POST body — before appending the new turn,
+  so it excludes the current query.
+- **Server re-clamps the untrusted history.** `route.ts` `clampHistory()` caps to the last
+  6 turns and each text to 500 chars, drops empties/bad roles — bounds tokens/abuse, never
+  trusts the client's length.
+- **Merged intent drives the candidate pool.** New `mergeCravings(userTexts)` in
+  `recommend.ts` (next to `parseQuery`, shared with future search use) runs `parseQuery`
+  over the recent user turns (history + current): later turns win per-field (cuisine
+  corrections replace, neighborhood/price/spice override), vibes union, "near me" is
+  last-wins. The merged result builds `blended` + `neighborhood` for `recommend(...)`.
+- **`askClaude` is multi-turn.** Prior turns become an alternating Anthropic `messages`
+  array (`toClaudeMessages` guards: starts with `user`, merges consecutive same-role,
+  always ends on the current message carrying the candidates), with one system-prompt line
+  telling the model to treat the latest message as a refinement. STRICT-JSON contract,
+  small-talk + order-intent gates, `sanitizeReplyText`, and all voice rules unchanged.
+- **Keyless fallback** can't converse, but the merged-intent pool already picks better
+  spots on a refinement (verified: "something cheaper" after "spicy thai" returns cheap
+  Thai, not city-wide cheap). v1 scope — referring to prior picks ("the first one") and
+  cross-session persistence are noted as v2 in the handoff, not built.
+
 ## 2026-06-19 — Chatbot voice naturalness
 
 A voice/presentation pass over both chatbot engines so the concierge and the "what to

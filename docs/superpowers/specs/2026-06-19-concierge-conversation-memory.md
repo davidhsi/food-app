@@ -1,6 +1,12 @@
 # Handoff: concierge conversation memory
 
-**Status:** Planned (not started) · **Created:** 2026-06-19 · **For:** the next session
+**Status:** Shipped (2026-06-19) · **Created:** 2026-06-19 · **For:** the next session
+
+> Shipped per this plan (v1 only). Decision record:
+> `docs/decisions/2026-06-19-concierge-conversation-memory.md`; timeline entry under
+> 2026-06-19. The keyed Claude multi-turn path was type-checked/code-reviewed but not
+> exercised live (no `ANTHROPIC_API_KEY` in the dev environment); the keyless refinement
+> chain was verified end-to-end.
 
 ## Why / goal
 

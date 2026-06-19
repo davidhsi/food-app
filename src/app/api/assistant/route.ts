@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RESTAURANTS_FULL } from "@/lib/data.server";
 import { NEIGHBORHOODS } from "@/lib/neighborhoods";
-import { parseQuery, recommend } from "@/lib/recommend";
+import { mergeCravings, recommend } from "@/lib/recommend";
 import { gemScore, Restaurant, TasteProfile } from "@/lib/types";
 import {
   buildLocalOrderGuide,
@@ -13,11 +13,42 @@ import { askClaudeOrder } from "@/lib/order.server";
 
 export const runtime = "nodejs";
 
+interface Turn {
+  role: "user" | "assistant";
+  text: string;
+}
+
 interface Body {
   query: string;
   profile: TasteProfile;
   // Client-resolved nearest neighborhood, sent only for "near me" queries.
   nearNeighborhood?: string | null;
+  // Bounded, client-held conversation history (prior turns, oldest → newest;
+  // excludes the current `query`). The server stays stateless — see
+  // planning/2026-06-17-data-storage-db-assessment.md. Re-trimmed/clamped
+  // server-side below since it's client-supplied.
+  history?: Turn[];
+}
+
+// History caps. Keep the last few turns (~3 exchanges) for both the merged
+// craving and the Claude context, and bound each turn's length so a malformed
+// or abusive client can't blow up the token budget.
+const MAX_HISTORY_TURNS = 6;
+const MAX_TURN_CHARS = 500;
+
+/** Re-trim and validate client-supplied history (it's untrusted). */
+function clampHistory(raw: unknown): Turn[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (m): m is Turn =>
+        !!m &&
+        (m.role === "user" || m.role === "assistant") &&
+        typeof m.text === "string",
+    )
+    .map((m) => ({ role: m.role, text: m.text.trim().slice(0, MAX_TURN_CHARS) }))
+    .filter((m) => m.text.length > 0)
+    .slice(-MAX_HISTORY_TURNS);
 }
 
 // Best-effort in-memory rate limit. Caps Claude spend / abuse per client. It's
@@ -115,8 +146,16 @@ export async function POST(req: NextRequest) {
     // No named restaurant matched — fall through to the normal recommend flow.
   }
 
-  // Build a strong candidate pool with the local engine first.
-  const parsed = parseQuery(query);
+  // Build a strong candidate pool with the local engine first. Accumulate intent
+  // across the recent user turns (history + current) so a refinement composes
+  // with what came before — "spicy thai" then "something cheaper" narrows
+  // instead of resetting to city-wide cheap spots.
+  const history = clampHistory(body.history);
+  const userTexts = [
+    ...history.filter((m) => m.role === "user").map((m) => m.text),
+    query,
+  ];
+  const parsed = mergeCravings(userTexts);
   const blended: TasteProfile = {
     ...profile,
     cuisines: parsed.cuisines?.length ? (parsed.cuisines as any) : profile.cuisines,
@@ -163,6 +202,7 @@ export async function POST(req: NextRequest) {
         profile,
         localScored,
         neighborhood,
+        history,
       );
       if (result) return NextResponse.json({ ...result, engine: "claude" });
     } catch (e) {
@@ -287,6 +327,7 @@ async function askClaude(
   profile: TasteProfile,
   candidates: ReturnType<typeof recommend>,
   neighborhood: string | null = null,
+  history: Turn[] = [],
 ) {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
   const compact = candidates.map((s) => ({
@@ -322,6 +363,9 @@ async function askClaude(
     'NEVER sound like a machine: no percentages or match scores, no "X% match" or "match for your taste", no formulaic openers like "I\'d start with" or "Here are". ' +
     "Plain text only: no emoji, and no em dashes (use commas or periods instead). " +
     'Example of the voice: "Tucked off Cermak, Mai\'s does a duck larb worth the detour. Go early on weekends before the line." ' +
+    (history.length
+      ? "This is a continuing conversation. Honor what the user already told you and treat the latest message as a refinement of it, not a fresh start. "
+      : "") +
     "restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
 
   const userMsg =
@@ -329,6 +373,11 @@ async function askClaude(
     (neighborhood ? `Requested neighborhood: ${neighborhood}\n` : "") +
     `Taste profile: ${JSON.stringify(profile)}\n` +
     `Candidates: ${JSON.stringify(compact)}`;
+
+  // Prior turns become the conversation; `userMsg` (which carries the candidates)
+  // is the current turn. toClaudeMessages guarantees the array starts with a
+  // user turn and alternates, which the Messages API requires.
+  const messages = toClaudeMessages(history, userMsg);
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -341,7 +390,7 @@ async function askClaude(
       model,
       max_tokens: 400,
       system,
-      messages: [{ role: "user", content: userMsg }],
+      messages,
     }),
   });
 
@@ -389,6 +438,37 @@ function findNamedRestaurant(query: string): Restaurant | undefined {
     .filter((r) => r.name.length >= 4)
     .sort((a, b) => b.name.length - a.name.length)
     .find((r) => text.includes(r.name.toLowerCase()));
+}
+
+/**
+ * Turn the bounded history + the current user message into a valid Anthropic
+ * Messages array. The API requires the array to START with a user turn and to
+ * ALTERNATE user/assistant, so this defends against a malformed client history:
+ * a leading assistant turn is dropped, consecutive same-role turns are merged,
+ * and the current `finalUserContent` is folded into a trailing user turn (or
+ * appended) so the result always ends on the current user message.
+ */
+function toClaudeMessages(
+  history: Turn[],
+  finalUserContent: string,
+): { role: "user" | "assistant"; content: string }[] {
+  const turns: { role: "user" | "assistant"; content: string }[] = [];
+  for (const h of history) {
+    if (turns.length === 0 && h.role === "assistant") continue; // must start with user
+    const last = turns[turns.length - 1];
+    if (last && last.role === h.role) {
+      last.content += "\n" + h.text; // merge consecutive same-role turns
+    } else {
+      turns.push({ role: h.role, content: h.text });
+    }
+  }
+  const last = turns[turns.length - 1];
+  if (last && last.role === "user") {
+    last.content += "\n\n" + finalUserContent;
+  } else {
+    turns.push({ role: "user", content: finalUserContent });
+  }
+  return turns;
 }
 
 function extractJson(text: string): any | null {

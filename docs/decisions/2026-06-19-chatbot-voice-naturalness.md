@@ -90,9 +90,11 @@ your message to go on, but…" — because the Claude prompt always required 3�
 - The client already renders cards only when `restaurantIds.length > 0`, so empty replies
   show as a plain bubble — no UI change needed.
 
-**Known limitation (not addressed here):** the concierge is **stateless** — each request
-sends only the query + taste profile, no prior turns, so there is no conversation memory.
-A follow-up could thread recent messages into the prompt; deferred.
+**Known limitation (resolved 2026-06-19):** the concierge *was* stateless — each request
+sent only the query + taste profile, no prior turns, so follow-ups like "something cheaper"
+reset instead of refining. Conversation memory now ships: the client sends a bounded
+history and the server accumulates intent across turns (the server stays stateless — no DB).
+See `2026-06-19-concierge-conversation-memory.md` and the timeline entry.
 
 ## Status
 

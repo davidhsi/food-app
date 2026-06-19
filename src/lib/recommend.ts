@@ -317,3 +317,40 @@ export function parseQuery(q: string): Partial<TasteProfile> & {
 
   return profile;
 }
+
+/**
+ * Merge the cravings expressed across a sequence of user turns into one intent,
+ * so a follow-up *refines* rather than resets — "spicy thai" then "something
+ * cheaper" then "what about Pilsen?" should narrow (spicy + Thai + cheap +
+ * Pilsen), not start over. `userTexts` is oldest → newest (the last element is
+ * the current message).
+ *
+ * Merge rule: the latest turn that specifies a field wins (later overrides
+ * earlier), so a correction like "actually, italian" replaces an earlier "thai"
+ * and "near me" then "what about Pilsen?" lands on Pilsen. Vibes are the
+ * exception — they accumulate (union), since they compose rather than
+ * contradict (a "date night" that's also "cozy"). Fields no turn specifies stay
+ * absent, exactly like `parseQuery`, so callers fall back to the stored profile.
+ */
+export function mergeCravings(
+  userTexts: string[],
+): ReturnType<typeof parseQuery> {
+  const merged: ReturnType<typeof parseQuery> = { keywords: [] };
+  const vibes = new Set<string>();
+  for (const text of userTexts) {
+    const p = parseQuery(text);
+    merged.keywords = p.keywords; // current turn's keywords (latest wins)
+    if (p.cuisines?.length) merged.cuisines = p.cuisines;
+    if (p.vibes?.length) p.vibes.forEach((v) => vibes.add(v));
+    if (p.price?.length) merged.price = p.price;
+    if (p.neighborhood) merged.neighborhood = p.neighborhood;
+    if (p.spiceTolerance != null) merged.spiceTolerance = p.spiceTolerance;
+    if (p.undergroundBias != null) merged.undergroundBias = p.undergroundBias;
+    // "near me" is a fresh spatial intent tied to the current message (the
+    // client only resolves geolocation for the latest turn), so it's
+    // last-wins, not accumulated — a later non-spatial turn clears it.
+    merged.nearMe = p.nearMe;
+  }
+  if (vibes.size) merged.vibes = Array.from(vibes) as any;
+  return merged;
+}

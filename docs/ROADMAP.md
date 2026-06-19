@@ -10,15 +10,9 @@ Living backlog of planned feature work. Each item graduates to its own
 
 _Nothing in active development right now — see
 [`docs/feature-timeline.md`](./feature-timeline.md) for recently shipped work
-(most recently: launch hardening, 2026-06-19)._
+(most recently: concierge conversation memory, 2026-06-19)._
 
 ## Planned
-
-### Concierge conversation memory  ·  _handoff ready_
-Make the `/assistant` concierge carry context so follow-ups compose ("spicy thai" → "something
-cheaper" → "what about Pilsen?"), while keeping the server stateless (memory is client-held and
-sent per request). Full grounded handoff + plan:
-[`docs/superpowers/specs/2026-06-19-concierge-conversation-memory.md`](./superpowers/specs/2026-06-19-concierge-conversation-memory.md).
 
 ### Feed search & filter affordance
 Bring lightweight discovery controls to the feed itself (today search/filter only

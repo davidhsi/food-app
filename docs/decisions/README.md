@@ -25,6 +25,7 @@ Superseded by …).
 | 2026-06-19 | [Ordering & dish guidance — "what should I order here?" (request-time, no live voting)](./2026-06-19-ordering-and-dish-guidance.md) | Shipped |
 | 2026-06-19 | [Discovery & navigation UX — search ↔ concierge, "near me", navigation state](./2026-06-19-discovery-and-navigation-ux.md) | Shipped |
 | 2026-06-19 | [Chatbot voice — naturalness across both engines (seeded variation, no machine tells)](./2026-06-19-chatbot-voice-naturalness.md) | Shipped |
+| 2026-06-19 | [Concierge conversation memory — stateless server, client-held history, merged intent](./2026-06-19-concierge-conversation-memory.md) | Shipped |
 
 > The data-storage assessment lives under top-level `planning/` for historical
 > reasons; it's the same kind of record and is indexed here for discoverability.

@@ -33,6 +33,12 @@ export default function AssistantPage() {
     const query = q.trim();
     if (!query || loading) return;
     setInput("");
+    // Bounded conversation context: the recent prior turns (before this new one),
+    // trimmed to role+text. The server is stateless and re-clamps this; sending
+    // it lets follow-ups refine instead of resetting.
+    const history = messages
+      .slice(-6)
+      .map((m) => ({ role: m.role, text: m.text }));
     setMessages((m) => [...m, { role: "user", text: query }]);
     setLoading(true);
     track("assistant_query", { length: query.length });
@@ -45,7 +51,7 @@ export default function AssistantPage() {
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query, profile, nearNeighborhood }),
+        body: JSON.stringify({ query, profile, nearNeighborhood, history }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data) {
