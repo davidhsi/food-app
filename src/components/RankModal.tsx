@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Restaurant } from "@/lib/types";
 import { getRestaurant } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
+import { XIcon } from "./icons";
 import {
   RankingSession,
   recordComparison,
@@ -33,6 +34,15 @@ export default function RankModal({
     () => [...ranked].sort((a, b) => b.score - a.score),
     [ranked],
   );
+
+  // Dismiss on Escape, like any modal dialog.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const finish = (s: RankingSession) => {
     track("rank_complete", { id: restaurant.id, listSize: ranked.length + 1 });
@@ -98,14 +108,25 @@ export default function RankModal({
       onClick={onClose}
     >
       <div
-        className="w-full rounded-t-3xl border-t border-line bg-paper-raised p-5 pb-8 animate-floatUp"
+        className="relative w-full rounded-t-3xl border-t border-line bg-paper-raised p-5 pb-8 animate-floatUp"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Rank ${restaurant.name}`}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full text-ink-soft transition hover:bg-paper active:scale-95"
+        >
+          <XIcon width={18} height={18} />
+        </button>
 
         {!bucket && (
           <>
-            <h3 className="font-display text-center text-lg font-bold text-ink">
+            <h3 className="font-display text-center text-lg font-semibold text-ink">
               How was <span className="text-olive">{restaurant.name}</span>?
             </h3>
             <p className="mt-1 text-center text-sm text-ink-soft">
@@ -133,7 +154,7 @@ export default function RankModal({
 
         {bucket && session && !session.done && pivotRestaurant && (
           <>
-            <h3 className="font-display text-center text-base font-bold text-ink">
+            <h3 className="font-display text-center text-base font-semibold text-ink">
               Which did you like more?
             </h3>
             <div className="mt-4 grid grid-cols-2 gap-3">

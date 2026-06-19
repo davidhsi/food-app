@@ -32,15 +32,23 @@ function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
               className="h-full w-full object-cover"
             />
           )}
-          <div className="absolute left-3 top-3 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-semibold text-paper backdrop-blur-sm">
-            <span className="text-gem">◆</span> {score}
+          <div
+            className="absolute left-3 top-3 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-semibold text-paper backdrop-blur-sm"
+            aria-label={`Gem score ${score} out of 10`}
+          >
+            <span className="text-gem" aria-hidden="true">◆</span> {score}
           </div>
         </div>
         <h3 className="mt-3 font-display text-2xl font-semibold leading-tight text-ink">
           {r.name}
         </h3>
         <div className="mt-1.5 text-[13px] text-ink-soft">
-          <span className="font-semibold text-olive">★ {r.rating.toFixed(1)}</span>{" "}
+          <span
+            className="font-semibold text-olive"
+            aria-label={`Rated ${r.rating.toFixed(1)} out of 10`}
+          >
+            <span aria-hidden="true">★</span> {r.rating.toFixed(1)}
+          </span>{" "}
           · {r.cuisines.join(" · ")} · {priceStr(r.price)} · {r.neighborhood}
         </div>
       </Link>
@@ -52,7 +60,7 @@ function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
         }}
         aria-label={isSaved ? "Remove from want to try" : "Save to want to try"}
         aria-pressed={isSaved}
-        className="absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-paper-raised/90 text-ink backdrop-blur-sm active:scale-90 transition-transform"
+        className="absolute right-2.5 top-2.5 grid h-11 w-11 place-items-center rounded-full bg-paper-raised/90 text-ink backdrop-blur-sm active:scale-90 transition-transform"
       >
         <BookmarkIcon filled={isSaved} width={16} height={16} />
       </button>

@@ -32,6 +32,21 @@ export default function Feed({
   const shown = restaurants.slice(0, visible);
   const hasMore = visible < restaurants.length;
 
+  // Scroll the nearest scrollable ancestor (AppShell scrolls per-page, not the
+  // window) back to the top.
+  const backToTop = (e: React.MouseEvent<HTMLButtonElement>) => {
+    let el: HTMLElement | null = e.currentTarget;
+    while (el && el !== document.body) {
+      const oy = getComputedStyle(el).overflowY;
+      if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight) {
+        el.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      el = el.parentElement;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="px-4">
       {shown.map((r) => (
@@ -46,9 +61,21 @@ export default function Feed({
           Show more gems
         </button>
       ) : (
-        <p className="pb-6 pt-2 text-center text-[13px] text-ink-faint">
-          You&apos;re all caught up — come back tomorrow for more gems.
-        </p>
+        <div className="mb-6 mt-2 rounded-2xl border border-line bg-paper-raised px-5 py-6 text-center">
+          <div className="font-display text-base font-semibold text-ink">
+            You&apos;re all caught up
+          </div>
+          <p className="mt-1 text-[13px] text-ink-soft">
+            That&apos;s every gem for now — come back tomorrow for more.
+          </p>
+          <button
+            type="button"
+            onClick={backToTop}
+            className="mt-4 rounded-full bg-paper px-4 py-2 text-sm font-medium text-ink-soft ring-1 ring-line active:scale-95"
+          >
+            Back to top
+          </button>
+        </div>
       )}
     </div>
   );

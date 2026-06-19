@@ -64,14 +64,21 @@ export default function HelpMeDecide() {
             >
               See it <ArrowRight width={16} height={16} />
             </button>
-            <button
-              type="button"
-              onClick={() => setAskCount((n) => n + 1)}
-              className="rounded-full bg-paper px-4 py-2.5 text-sm font-medium text-ink-soft ring-1 ring-line active:scale-95"
-            >
-              Pick again
-            </button>
+            {askCount < Math.min(top.length, 3) - 1 && (
+              <button
+                type="button"
+                onClick={() => setAskCount((n) => n + 1)}
+                className="rounded-full bg-paper px-4 py-2.5 text-sm font-medium text-ink-soft ring-1 ring-line active:scale-95"
+              >
+                Pick again
+              </button>
+            )}
           </div>
+          {askCount >= Math.min(top.length, 3) - 1 && (
+            <p className="mt-2 text-center text-xs text-ink-faint">
+              That&apos;s our short list — browse the feed for more.
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -42,7 +42,21 @@ export default function AssistantPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ query, profile }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            text:
+              res.status === 429
+                ? data?.reply ??
+                  "I'm fielding a lot of requests right now — give it a few seconds and try again."
+                : "Something went wrong on my end — try again in a moment.",
+          },
+        ]);
+        return;
+      }
       setMessages((m) => [
         ...m,
         {
@@ -55,7 +69,10 @@ export default function AssistantPage() {
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: "Something went wrong — try again." },
+        {
+          role: "assistant",
+          text: "I couldn't reach the server — check your connection and try again.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -138,7 +155,12 @@ export default function AssistantPage() {
           ))}
 
           {loading && (
-            <div className="flex items-center gap-1.5 text-ink-faint">
+            <div
+              role="status"
+              aria-live="polite"
+              aria-label="Finding spots for you"
+              className="flex items-center gap-1.5 text-ink-faint"
+            >
               <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint [animation-delay:-0.2s]" />
               <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint [animation-delay:-0.1s]" />
               <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint" />
@@ -158,6 +180,18 @@ export default function AssistantPage() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onFocus={() =>
+                // Let the on-screen keyboard animate in, then bring the latest
+                // content (and this input) above it.
+                setTimeout(
+                  () =>
+                    endRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "end",
+                    }),
+                  300,
+                )
+              }
               placeholder="What are you in the mood for?"
               aria-label="Describe what you're craving"
               enterKeyHint="send"

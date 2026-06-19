@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import SpotCard from "@/components/SpotCard";
-import { SearchIcon } from "@/components/icons";
+import { SearchIcon, XIcon } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { useStore } from "@/lib/store";
@@ -82,6 +82,45 @@ export default function SearchPage() {
     return scored;
   }, [submitted, cuisine, store.profile, store.liked, store.saved, store.ranked]);
 
+  const runQuery = (t: string) => {
+    setQ(t);
+    setSubmitted(t);
+    track("search_submit", { query: t.slice(0, 80) });
+  };
+
+  // Discovery blocks shown both before a search and as a recovery path when a
+  // search returns nothing — so the dead end always offers somewhere to go.
+  const discovery = (
+    <>
+      <h2 className="font-display text-sm font-semibold text-ink-faint">
+        Trending searches
+      </h2>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {TRENDING.map((t) => (
+          <button
+            key={t}
+            onClick={() => runQuery(t)}
+            className="rounded-full bg-paper-raised px-4 py-2 text-sm text-ink-soft ring-1 ring-line active:scale-95"
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <h2 className="font-display mt-8 text-sm font-semibold text-ink-faint">
+        <span className="text-olive">◆</span> Under the radar near you
+      </h2>
+      <div className="mt-3">
+        {[...RESTAURANTS]
+          .sort((a, b) => gemScore(b) - gemScore(a))
+          .slice(0, 6)
+          .map((r) => (
+            <SpotCard key={r.id} restaurant={r} />
+          ))}
+      </div>
+    </>
+  );
+
   return (
     <AppShell>
       <div className="relative h-full">
@@ -113,14 +152,14 @@ export default function SearchPage() {
                   setSubmitted("");
                 }}
                 aria-label="Clear search"
-                className="text-ink-faint"
+                className="-mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-faint active:scale-90"
               >
-                ✕
+                <XIcon width={16} height={16} />
               </button>
             )}
           </form>
 
-          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
+          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto [mask-image:linear-gradient(to_right,black_92%,transparent)]">
             <button
               onClick={() => setCuisine(null)}
               className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
@@ -149,45 +188,19 @@ export default function SearchPage() {
         {results ? (
           <div className="h-full overflow-y-auto px-4 pb-24 pt-32">
             {results.length === 0 ? (
-              <p className="pt-8 text-center text-sm text-ink-soft">
-                No matches for &quot;{submitted}&quot;. Try another craving.
-              </p>
+              <div className="px-1">
+                <p className="pt-2 text-center text-sm text-ink-soft">
+                  No matches for &quot;{submitted}&quot;. Here&apos;s where to look
+                  instead.
+                </p>
+                <div className="mt-6">{discovery}</div>
+              </div>
             ) : (
               results.map((s) => <SpotCard key={s.restaurant.id} restaurant={s.restaurant} />)
             )}
           </div>
         ) : (
-          <div className="h-full overflow-y-auto px-5 pb-24 pt-32">
-            <h2 className="font-display text-sm font-semibold text-ink-faint">
-              Trending searches
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {TRENDING.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => {
-                    setQ(t);
-                    setSubmitted(t);
-                  }}
-                  className="rounded-full bg-paper-raised px-4 py-2 text-sm text-ink-soft ring-1 ring-line active:scale-95"
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <h2 className="font-display mt-8 text-sm font-semibold text-ink-faint">
-              <span className="text-olive">◆</span> Under the radar near you
-            </h2>
-            <div className="mt-3">
-              {[...RESTAURANTS]
-                .sort((a, b) => gemScore(b) - gemScore(a))
-                .slice(0, 6)
-                .map((r) => (
-                  <SpotCard key={r.id} restaurant={r} />
-                ))}
-            </div>
-          </div>
+          <div className="h-full overflow-y-auto px-5 pb-24 pt-32">{discovery}</div>
         )}
       </div>
     </AppShell>
