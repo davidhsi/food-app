@@ -1,6 +1,7 @@
 import { Restaurant, TasteProfile } from "./types";
 import {
   buildLocalOrderGuide,
+  noteForDish,
   OrderGuide,
   sanitizePicks,
 } from "./order";
@@ -66,7 +67,10 @@ export async function askClaudeOrder(
   const json = extractJson(text);
   if (!json) return null;
 
-  const picks = sanitizePicks(json.picks, r.signatureDishes, allergies);
+  const picks = sanitizePicks(json.picks, r.signatureDishes, allergies).map((p) => {
+    const note = noteForDish(p.dish, r.topDishes);
+    return note ? { ...p, note } : p;
+  });
   if (!picks.length) return null; // nothing valid — let caller fall back
 
   const intro =

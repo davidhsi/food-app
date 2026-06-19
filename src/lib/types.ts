@@ -149,13 +149,6 @@ export interface RankedEntry {
   ts: number;
 }
 
-/** A user's personal ranking of one dish at one restaurant (local-only). */
-export interface DishRank {
-  dish: string;
-  score: number; // 0..10 derived from comparison position, same as RankedEntry
-  ts: number;
-}
-
 export interface RecommendationReason {
   label: string;
   weight: number; // contribution to score, for explainability
