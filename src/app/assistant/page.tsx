@@ -19,7 +19,7 @@ const SUGGESTIONS = [
   "Find me a hidden gem for dinner tonight",
   "An underground spot to impress a date",
   "Hole-in-the-wall, spicy, cash is fine",
-  "Where do locals actually eat near me?",
+  "What should I order at …?",
 ];
 
 export default function AssistantPage() {

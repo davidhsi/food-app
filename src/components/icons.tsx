@@ -100,3 +100,10 @@ export const XIcon = (p: P) => (
   </svg>
 );
 
+export const UtensilsIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M5 3v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M7 11v10" />
+    <path d="M17 3c-1.7 0-3 1.8-3 4.5S15.3 12 17 12v9" />
+  </svg>
+);
+

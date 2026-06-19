@@ -23,6 +23,13 @@ for (const r of data) {
   assert.ok(r.city === "Chicago", `city on ${r.id}`);
   assert.ok(r.reels[0]?.poster !== undefined, `poster on ${r.id}`);
   assert.ok(r.blurb && r.insiderTip, `editorial on ${r.id}`);
+  if (r.topDishes) {
+    assert.ok(r.topDishes.length <= 3, `topDishes <= 3 on ${r.id}`);
+    const dishes = new Set(r.signatureDishes);
+    for (const t of r.topDishes) {
+      assert.ok(dishes.has(t.dish), `topDish "${t.dish}" in signatureDishes on ${r.id}`);
+    }
+  }
 }
 
 const neighborhoods = new Set(data.map((r) => r.neighborhood));

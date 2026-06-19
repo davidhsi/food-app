@@ -82,12 +82,12 @@ measurable and safe rather than just bigger.
 
 ### 3. SEO + per-restaurant OG images
 
-- The detail route was **client-only**, so it couldn't export `generateMetadata`.
-  Split it: server `src/app/restaurant/[id]/page.tsx` (exports
-  `generateMetadata`, renders the client child) wrapping
-  `src/app/restaurant/[id]/RestaurantDetail.tsx` (the former page body, now
-  takes an `id` prop). The route stays dynamic (`ƒ`) — no `generateStaticParams`,
-  so we don't prerender 1,600+ pages.
+- The detail route's server `page.tsx` exports `generateMetadata` alongside the
+  page. (It became a server component in the data-split work — it loads the full
+  record via `getFullRestaurant` and renders the client
+  `src/components/RestaurantDetail.tsx`; `generateMetadata` reuses
+  `getFullRestaurant` so it can read the `insiderTip`.) The route stays dynamic
+  (`ƒ`) — no `generateStaticParams`, so we don't prerender 1,600+ pages.
 - `src/lib/site.ts` — canonical `SITE_URL` (prefers `NEXT_PUBLIC_SITE_URL`, then
   `VERCEL_URL`, then localhost), `SITE_NAME`, `SITE_TAGLINE`. Used for
   `metadataBase` and OG absolute URLs.

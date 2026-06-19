@@ -3,19 +3,14 @@
 Living backlog of planned feature work. Each item graduates to its own
 `docs/superpowers/specs/` design + `docs/superpowers/plans/` plan when picked up.
 
-## Shipped
+> Shipped work is logged in [`docs/feature-timeline.md`](./feature-timeline.md);
+> the *why* behind non-obvious calls lives in [`docs/decisions/`](./decisions/).
 
-- **Neighborhood-aware feed** — neighborhood selector that soft-steers the feed
-  by Chicago area, with first-run geolocation auto-detect.
-  Spec: `specs/2026-06-14-neighborhood-aware-feed-design.md`.
-- **Launch hardening** (2026-06-19) — analytics (Vercel Analytics + Speed
-  Insights + a typed `track()` layer), error/404 surfaces (`error.tsx`,
-  `global-error.tsx`, `not-found.tsx`, detail-page `notFound()`), per-restaurant
-  OG images + dynamic metadata, per-IP rate limiting on `/api/assistant`, and an
-  accessibility labeling pass. Spec:
-  `specs/2026-06-19-launch-hardening-design.md`.
-  - **Deploy note:** set `NEXT_PUBLIC_SITE_URL` to the canonical domain so
-    OG/canonical URLs use the branded host (not per-deployment `VERCEL_URL`).
+## In progress
+
+_Nothing in active development right now — see
+[`docs/feature-timeline.md`](./feature-timeline.md) for recently shipped work
+(most recently: launch hardening, 2026-06-19)._
 
 ## Planned
 
@@ -54,3 +49,13 @@ Named in CLAUDE.md / specs as intentionally not-yet-built:
 - **Earliness receipts** — real backend-backed "you found it early" proof
   (requires a backend; today earliness is derived from `buzz`, never live counts).
 - **Dark mode**.
+- **Ordering Phase 3 — ingest dish enrichment.** Per-dish data (descriptions, per-dish
+  allergens/dietary/spice) generated at ingest for richer, fully-offline guides. Also
+  the work that populates the dormant `topDishes` crowd note. Needs API keys + a regen.
+- **Per-dish photos** — deferred on honesty grounds (Places photos are restaurant-level
+  with no dish mapping). Would need a confidence-gated Claude-vision ingest pass or user
+  uploads. See [the ordering/dish decision record](./decisions/2026-06-19-ordering-and-dish-guidance.md).
+- **Live cross-user dish voting — declined (not just deferred).** Trips the deferred-DB
+  trigger and is dishonest on low-buzz spots (per-dish cold-start). The crowd signal is
+  delivered editorially instead (`topDishes`). Rationale + the hard "never" guardrails:
+  [decision record](./decisions/2026-06-19-ordering-and-dish-guidance.md).

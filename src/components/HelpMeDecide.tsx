@@ -17,11 +17,13 @@ export default function HelpMeDecide() {
   const [open, setOpen] = useState(false);
   const [askCount, setAskCount] = useState(0);
 
-  const pick = useMemo(() => {
-    const scored = recommend({ profile, liked, saved, ranked, seen });
-    const top = scored.slice(0, 5);
-    return top.length ? top[askCount % top.length] : null;
-  }, [profile, liked, saved, ranked, seen, askCount]);
+  // Score once per taste/state change. "Pick again" (askCount) only walks this
+  // cached top list — it must never re-score all ~1.6k restaurants.
+  const top = useMemo(
+    () => recommend({ profile, liked, saved, ranked, seen }).slice(0, 5),
+    [profile, liked, saved, ranked, seen],
+  );
+  const pick = top.length ? top[askCount % top.length] : null;
 
   if (!pick) return null;
 

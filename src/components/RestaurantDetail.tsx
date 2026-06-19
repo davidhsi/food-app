@@ -2,15 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { getRestaurant } from "@/lib/data";
-import { gemScore } from "@/lib/types";
+import { gemScore, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { scoreRestaurant } from "@/lib/recommend";
 import { track } from "@/lib/analytics";
 import RankModal from "@/components/RankModal";
 import ShareSpot from "@/components/ShareSpot";
 import UserDistance from "@/components/UserDistance";
+import OrderGuide from "@/components/OrderGuide";
 import {
   BookmarkIcon,
   ChevronLeft,
@@ -20,9 +19,17 @@ import {
   StarIcon,
 } from "@/components/icons";
 
-export default function RestaurantDetail({ id }: { id: string }) {
+/**
+ * Detail view. Receives the FULL record (incl. detail-only `insiderTip`/`blurb`)
+ * from the server component wrapper, so the client never bundles those fields
+ * for every restaurant — they arrive per-record, on demand.
+ */
+export default function RestaurantDetail({
+  restaurant: r,
+}: {
+  restaurant: Restaurant;
+}) {
   const router = useRouter();
-  const r = getRestaurant(id);
   const profile = useStore((s) => s.profile);
   const liked = useStore((s) => s.liked);
   const saved = useStore((s) => s.saved);
@@ -33,27 +40,9 @@ export default function RestaurantDetail({ id }: { id: string }) {
   const [ranking, setRanking] = useState(false);
 
   const scored = useMemo(
-    () => (r ? scoreRestaurant(r, { profile, liked, saved, ranked, seen }) : null),
+    () => scoreRestaurant(r, { profile, liked, saved, ranked, seen }),
     [r, profile, liked, saved, ranked, seen],
   );
-
-  useEffect(() => {
-    if (r) track("restaurant_view", { id: r.id, neighborhood: r.neighborhood });
-  }, [r]);
-
-  if (!r) {
-    return (
-      <div className="phone-shell flex flex-col items-center justify-center bg-paper px-8 text-center text-ink-soft">
-        <p>We couldn&apos;t find that spot.</p>
-        <Link
-          href="/feed"
-          className="mt-5 rounded-full bg-olive px-6 py-3 text-sm font-semibold text-paper active:scale-95"
-        >
-          Back to the feed
-        </Link>
-      </div>
-    );
-  }
 
   const isLiked = liked.includes(r.id);
   const isSaved = saved.includes(r.id);
@@ -61,6 +50,10 @@ export default function RestaurantDetail({ id }: { id: string }) {
   const poster = r.reels[0]?.poster;
   const found = Math.round(r.buzz * 100);
   const isGem = gemScore(r) >= 0.45;
+
+  useEffect(() => {
+    track("restaurant_view", { id: r.id, neighborhood: r.neighborhood });
+  }, [r.id, r.neighborhood]);
 
   const onSave = () => {
     track("save_toggle", { id: r.id, saved: !isSaved, source: "detail" });
@@ -180,6 +173,9 @@ export default function RestaurantDetail({ id }: { id: string }) {
         </div>
       )}
 
+      {/* What to order (taste-aware; instant local guide, Claude-upgraded) */}
+      <OrderGuide restaurant={r} />
+
       {/* Insider tip */}
       {r.insiderTip && (
         <div className="mx-5 mt-5 rounded-2xl border border-line bg-paper-raised p-3.5">
@@ -191,25 +187,12 @@ export default function RestaurantDetail({ id }: { id: string }) {
       )}
 
       {/* About */}
-      <div className="px-5 pt-5">
-        <h2 className="text-sm font-semibold text-ink-faint">About</h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-ink">{r.blurb}</p>
-      </div>
-
-      {/* Signature dishes */}
-      <div className="px-5 pt-5">
-        <h2 className="text-sm font-semibold text-ink-faint">Signature dishes</h2>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {r.signatureDishes.map((d) => (
-            <span
-              key={d}
-              className="rounded-full bg-paper-raised px-3 py-1.5 text-xs font-medium text-ink ring-1 ring-line"
-            >
-              {d}
-            </span>
-          ))}
+      {r.blurb && (
+        <div className="px-5 pt-5">
+          <h2 className="text-sm font-semibold text-ink-faint">About</h2>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink">{r.blurb}</p>
         </div>
-      </div>
+      )}
 
       {/* Known for */}
       <div className="px-5 pt-5">

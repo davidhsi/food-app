@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { gemScore, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
@@ -8,7 +9,7 @@ import { BookmarkIcon } from "./icons";
 
 const priceStr = (p: number) => "$".repeat(p);
 
-export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
+function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
   const toggleSave = useStore((s) => s.toggleSave);
   const isSaved = useStore((s) => s.saved.includes(r.id));
   const poster = r.reels[0]?.poster;
@@ -26,6 +27,8 @@ export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) 
             <img
               src={poster}
               alt={r.name}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           )}
@@ -56,3 +59,9 @@ export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) 
     </article>
   );
 }
+
+// Memoized: the feed re-renders on every store mutation (save, mark-seen,
+// profile edit); without this, all visible cards re-render even though only the
+// toggled one changed. Restaurant objects are stable identities from the
+// dataset, so the default shallow prop compare is correct here.
+export default memo(SpotCard);
