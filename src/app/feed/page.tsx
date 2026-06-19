@@ -7,6 +7,7 @@ import HelpMeDecide from "@/components/HelpMeDecide";
 import NeighborhoodChips from "@/components/NeighborhoodChips";
 import { useStore } from "@/lib/store";
 import { recommend } from "@/lib/recommend";
+import { useScrollRestoration } from "@/lib/useScrollRestoration";
 
 export default function FeedPage() {
   const profile = useStore((s) => s.profile);
@@ -15,6 +16,7 @@ export default function FeedPage() {
   const ranked = useStore((s) => s.ranked);
   const seen = useStore((s) => s.seen);
   const neighborhood = useStore((s) => s.neighborhood);
+  const scrollRef = useScrollRestoration<HTMLDivElement>("feed");
 
   const restaurants = useMemo(() => {
     const scored = recommend({
@@ -30,7 +32,7 @@ export default function FeedPage() {
 
   return (
     <AppShell>
-      <div className="h-full overflow-y-auto pb-24">
+      <div ref={scrollRef} className="h-full overflow-y-auto pb-24">
         <header className="px-5 pb-3 pt-9">
           <div className="font-display text-2xl font-semibold tracking-tight text-ink">
             Truffle<span className="text-olive">.</span>

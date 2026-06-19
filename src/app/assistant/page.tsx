@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
 import { resolveNearbyNeighborhood } from "@/lib/neighborhoods";
 import { parseQuery } from "@/lib/recommend";
+import { useScrollRestoration } from "@/lib/useScrollRestoration";
 import { track } from "@/lib/analytics";
 
 const SUGGESTIONS = [
@@ -26,6 +27,7 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useScrollRestoration<HTMLDivElement>("assistant");
 
   const send = async (q: string) => {
     const query = q.trim();
@@ -120,7 +122,10 @@ export default function AssistantPage() {
           </div>
         </header>
 
-        <div className="flex-1 min-h-0 space-y-4 overflow-y-auto px-4 py-5">
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 space-y-4 overflow-y-auto px-4 py-5"
+        >
           {messages.length === 0 && (
             <div className="mt-6">
               <p className="mt-4 text-center text-sm text-ink-soft">

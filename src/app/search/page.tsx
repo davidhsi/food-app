@@ -8,6 +8,7 @@ import { SearchIcon, XIcon, SparkleIcon, ArrowRight } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { resolveNearbyNeighborhood } from "@/lib/neighborhoods";
 import { parseQuery, recommend } from "@/lib/recommend";
+import { useScrollRestoration } from "@/lib/useScrollRestoration";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
 import { gemScore, Restaurant } from "@/lib/types";
@@ -46,6 +47,11 @@ export default function SearchPage() {
   const setSubmitted = (v: string) => store.setSearch({ searchSubmitted: v });
   const setCuisine = (v: string | null) => store.setSearch({ searchCuisine: v });
   const setGeoNbhd = (v: string | null) => store.setSearch({ searchGeoNbhd: v });
+  // Key by the query so a new search starts at the top, but returning to the
+  // same results (e.g. back from a restaurant) restores the user's place.
+  const scrollRef = useScrollRestoration<HTMLDivElement>(
+    `search:${submitted}:${cuisine ?? ""}`,
+  );
 
   // When a submitted query has "near me" intent, resolve the user's nearest
   // neighborhood so the result memo can steer toward it. Fail-silent: a denial
@@ -244,7 +250,7 @@ export default function SearchPage() {
 
         {/* Body */}
         {results ? (
-          <div className="h-full overflow-y-auto px-4 pb-24 pt-32">
+          <div ref={scrollRef} className="h-full overflow-y-auto px-4 pb-24 pt-32">
             {results.list.length === 0 ? (
               <div className="px-1">
                 <p className="pt-2 text-center text-sm text-ink-soft">

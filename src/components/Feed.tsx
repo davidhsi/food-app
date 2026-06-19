@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Restaurant } from "@/lib/types";
 import SpotCard from "./SpotCard";
 
 const PAGE = 24;
+
+// Tab-lifetime memory of how many cards were revealed for a given list, keyed by
+// the list's content. Lets "Show more" survive navigating into a restaurant and
+// back (paired with scroll restoration) while still resetting on a real list
+// change. Resets on a full reload.
+const windows = new Map<string, number>();
 
 export default function Feed({
   restaurants,
@@ -13,13 +19,28 @@ export default function Feed({
   restaurants: Restaurant[];
   emptyLabel?: string;
 }) {
+  // Identity of the underlying list (neighborhood/profile change → new key).
+  const listKey = `${restaurants.length}:${restaurants[0]?.id ?? ""}:${
+    restaurants[restaurants.length - 1]?.id ?? ""
+  }`;
+
   // Render the list in pages so we don't mount ~1.6k cards (and fire ~1.6k
-  // photo requests) at once. Reset the window whenever the list itself changes
-  // (e.g. neighborhood switch or new recommendations).
-  const [visible, setVisible] = useState(PAGE);
+  // photo requests) at once. Seed from the remembered window so back-navigation
+  // keeps the user's place; reset only when the list itself actually changes.
+  const [visible, setVisibleState] = useState(() => windows.get(listKey) ?? PAGE);
+  const prevKey = useRef(listKey);
   useEffect(() => {
-    setVisible(PAGE);
-  }, [restaurants]);
+    if (prevKey.current !== listKey) {
+      prevKey.current = listKey;
+      setVisibleState(windows.get(listKey) ?? PAGE);
+    }
+  }, [listKey]);
+  const setVisible = (updater: (v: number) => number) =>
+    setVisibleState((v) => {
+      const next = updater(v);
+      windows.set(listKey, next);
+      return next;
+    });
 
   if (restaurants.length === 0) {
     return (
