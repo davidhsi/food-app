@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import SpotCard from "@/components/SpotCard";
 import Link from "next/link";
 import { SearchIcon, XIcon, SparkleIcon, ArrowRight } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
+import { resolveNearbyNeighborhood } from "@/lib/neighborhoods";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
@@ -37,6 +38,21 @@ export default function SearchPage() {
   const [q, setQ] = useState("");
   const [submitted, setSubmitted] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
+  // Resolved once via geolocation when a query asks for "near me"; reused after.
+  const [geoNbhd, setGeoNbhd] = useState<string | null>(null);
+
+  // When a submitted query has "near me" intent, resolve the user's nearest
+  // neighborhood so the result memo can steer toward it. Fail-silent: a denial
+  // leaves geoNbhd null and search just stays city-wide.
+  useEffect(() => {
+    const active = submitted.trim();
+    if (!active || geoNbhd) return;
+    if (parseQuery(active).nearMe) {
+      resolveNearbyNeighborhood().then((n) => {
+        if (n) setGeoNbhd(n);
+      });
+    }
+  }, [submitted, geoNbhd]);
 
   const results = useMemo(() => {
     const active = submitted.trim();
@@ -70,8 +86,11 @@ export default function SearchPage() {
 
     // If the query named an area ("chinese in Lakeview"), steer hard toward it
     // so the named neighborhood's spots rank first instead of the city-wide
-    // best match — same behavior as the concierge.
-    const neighborhood = ("neighborhood" in parsed && parsed.neighborhood) || null;
+    // best match — same behavior as the concierge. "near me" resolves to the
+    // user's geolocated neighborhood instead.
+    const named = ("neighborhood" in parsed && parsed.neighborhood) || null;
+    const nearby = !!(parsed.nearMe && geoNbhd);
+    const neighborhood = nearby ? geoNbhd : named;
 
     const scored = recommend(
       {
@@ -88,8 +107,16 @@ export default function SearchPage() {
       },
       pool,
     );
-    return { list: scored, fallback };
-  }, [submitted, cuisine, store.profile, store.liked, store.saved, store.ranked]);
+    return { list: scored, fallback, nearby };
+  }, [
+    submitted,
+    cuisine,
+    geoNbhd,
+    store.profile,
+    store.liked,
+    store.saved,
+    store.ranked,
+  ]);
 
   const runQuery = (t: string) => {
     setQ(t);
@@ -223,10 +250,12 @@ export default function SearchPage() {
               </div>
             ) : (
               <>
-                {results.fallback && (
+                {(results.fallback || results.nearby) && (
                   <div className="mb-5">
                     <p className="text-sm text-ink-soft">
-                      No exact matches — here&apos;s what we&apos;d recommend.
+                      {results.nearby
+                        ? "Gems near you — ranked for your taste."
+                        : "No exact matches — here's what we'd recommend."}
                     </p>
                     {submitted.trim() && conciergeHandoff(submitted.trim())}
                   </div>

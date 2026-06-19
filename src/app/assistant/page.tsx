@@ -6,6 +6,8 @@ import SpotCard from "@/components/SpotCard";
 import { SparkleIcon } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
+import { resolveNearbyNeighborhood } from "@/lib/neighborhoods";
+import { parseQuery } from "@/lib/recommend";
 import { track } from "@/lib/analytics";
 
 interface Msg {
@@ -37,10 +39,15 @@ export default function AssistantPage() {
     setLoading(true);
     track("assistant_query", { length: query.length });
     try {
+      // For "near me" queries, resolve the user's neighborhood so the API can
+      // steer toward it. Fail-silent (null) if denied/unavailable.
+      const nearNeighborhood = parseQuery(query).nearMe
+        ? await resolveNearbyNeighborhood()
+        : null;
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query, profile }),
+        body: JSON.stringify({ query, profile, nearNeighborhood }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data) {
