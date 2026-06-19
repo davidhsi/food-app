@@ -3,6 +3,9 @@
 Living backlog of planned feature work. Each item graduates to its own
 `docs/superpowers/specs/` design + `docs/superpowers/plans/` plan when picked up.
 
+> Shipped work is logged in [`docs/feature-timeline.md`](./feature-timeline.md);
+> the *why* behind non-obvious calls lives in [`docs/decisions/`](./decisions/).
+
 ## In progress
 
 - **Neighborhood-aware feed** — a neighborhood selector that filters/steers the
@@ -37,3 +40,13 @@ Named in CLAUDE.md / specs as intentionally not-yet-built:
 - **Earliness receipts** — real backend-backed "you found it early" proof
   (requires a backend; today earliness is derived from `buzz`, never live counts).
 - **Dark mode**.
+- **Ordering Phase 3 — ingest dish enrichment.** Per-dish data (descriptions, per-dish
+  allergens/dietary/spice) generated at ingest for richer, fully-offline guides. Also
+  the work that populates the dormant `topDishes` crowd note. Needs API keys + a regen.
+- **Per-dish photos** — deferred on honesty grounds (Places photos are restaurant-level
+  with no dish mapping). Would need a confidence-gated Claude-vision ingest pass or user
+  uploads. See [the ordering/dish decision record](./decisions/2026-06-19-ordering-and-dish-guidance.md).
+- **Live cross-user dish voting — declined (not just deferred).** Trips the deferred-DB
+  trigger and is dishonest on low-buzz spots (per-dish cold-start). The crowd signal is
+  delivered editorially instead (`topDishes`). Rationale + the hard "never" guardrails:
+  [decision record](./decisions/2026-06-19-ordering-and-dish-guidance.md).
