@@ -3,7 +3,7 @@ import { RESTAURANTS_FULL } from "@/lib/data.server";
 import { NEIGHBORHOODS } from "@/lib/neighborhoods";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { gemScore, Restaurant, TasteProfile } from "@/lib/types";
-import { buildLocalOrderGuide, orderGuideToReply } from "@/lib/order";
+import { buildLocalOrderGuide, orderGuideToReply, seededPick } from "@/lib/order";
 import { askClaudeOrder } from "@/lib/order.server";
 
 export const runtime = "nodejs";
@@ -187,10 +187,37 @@ function composeLocalReply(
       : ` near ${neighborhood} (it's thin on this, so this is the closest I'd send you)`
     : "";
   const lead = gem
-    ? `Off-the-radar pick: ${r.name}${where}`
-    : `I'd start with ${r.name}${where}`;
+    ? seededPick(
+        [
+          `off-the-radar pick: ${r.name}${where}`,
+          `a quieter one: ${r.name}${where}`,
+          `${r.name}${where} is the under-the-radar call`,
+        ],
+        r.id,
+      )
+    : seededPick(
+        [
+          `I'd point you to ${r.name}${where}`,
+          `${r.name}${where} is where I'd start`,
+          `try ${r.name}${where}`,
+        ],
+        r.id,
+      );
+  // Qualitative cue only, never a number — and not when we're sending them
+  // out-of-area as a fallback (claiming a "strong fit" there would be a stretch).
+  const fit =
+    first.score >= 80 && inArea
+      ? seededPick(
+          [" — a strong fit", " — right in your wheelhouse", " — squarely your taste"],
+          r.id,
+        )
+      : "";
   const tip = gem && r.insiderTip ? ` ${r.insiderTip}` : "";
-  return `For "${query}", ${lead} — a ${first.score}% match for your taste.${tip} A few more lined up below.`;
+  const closer = seededPick(
+    [" A few more below.", " A handful of others below, too.", " More below if this isn't it."],
+    r.id,
+  );
+  return `For "${query}", ${lead}${fit}.${tip}${closer}`;
 }
 
 async function askClaude(
@@ -229,7 +256,10 @@ async function askClaude(
       ? `The user specifically asked for ${neighborhood}. Strongly prefer candidates whose neighborhood is "${neighborhood}". If few or none match, do NOT substitute another area silently — say plainly that ${neighborhood} is thin on this and offer the closest nearby spots from the candidates instead. `
       : "") +
     'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
-    "The reply is 1-2 warm, specific sentences (mention a dish or the insider tip). restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
+    "VOICE: write the reply like a friend who knows the city — warm, specific, calm. One or two sentences; vary how you open so replies don't all start the same way. Name a dish or work in the insider tip so it reads lived-in. " +
+    'NEVER sound like a machine: no percentages or match scores, no "X% match" or "match for your taste", no formulaic openers like "I\'d start with" or "Here are". ' +
+    'Example of the voice: "Tucked off Cermak, Mai\'s does a duck larb worth the detour — go early on weekends before the line." ' +
+    "restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
 
   const userMsg =
     `User craving: "${query}"\n` +
