@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Restaurant } from "@/lib/types";
 import { getRestaurant } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { track } from "@/lib/analytics";
 import {
   RankingSession,
   recordComparison,
@@ -34,6 +35,7 @@ export default function RankModal({
   );
 
   const finish = (s: RankingSession) => {
+    track("rank_complete", { id: restaurant.id, listSize: ranked.length + 1 });
     addRanked(s.candidateId, s.insertAt);
     onClose();
   };
@@ -55,6 +57,7 @@ export default function RankModal({
       }
     }
     if (pool.length === 0) {
+      track("rank_complete", { id: restaurant.id, listSize: ranked.length + 1 });
       addRanked(restaurant.id, offset);
       onClose();
       return;

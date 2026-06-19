@@ -3,12 +3,19 @@
 Living backlog of planned feature work. Each item graduates to its own
 `docs/superpowers/specs/` design + `docs/superpowers/plans/` plan when picked up.
 
-## In progress
+## Shipped
 
-- **Neighborhood-aware feed** — a neighborhood selector that filters/steers the
-  feed's `recommend()` output by Chicago area (9 neighborhoods, 40–50 spots each).
-  The feed has no steering today; the data is location-first (neighborhood,
-  `lat`/`lng`, live distance). _Spec in progress._
+- **Neighborhood-aware feed** — neighborhood selector that soft-steers the feed
+  by Chicago area, with first-run geolocation auto-detect.
+  Spec: `specs/2026-06-14-neighborhood-aware-feed-design.md`.
+- **Launch hardening** (2026-06-19) — analytics (Vercel Analytics + Speed
+  Insights + a typed `track()` layer), error/404 surfaces (`error.tsx`,
+  `global-error.tsx`, `not-found.tsx`, detail-page `notFound()`), per-restaurant
+  OG images + dynamic metadata, per-IP rate limiting on `/api/assistant`, and an
+  accessibility labeling pass. Spec:
+  `specs/2026-06-19-launch-hardening-design.md`.
+  - **Deploy note:** set `NEXT_PUBLIC_SITE_URL` to the canonical domain so
+    OG/canonical URLs use the branded host (not per-deployment `VERCEL_URL`).
 
 ## Planned
 
@@ -28,6 +35,16 @@ A map surface for browsing gems spatially using the existing `lat`/`lng` data.
 - Ties into live geolocation (`UserDistance`) and the neighborhood selector.
 - Open questions: map library/provider choice, clustering at city zoom,
   same-origin tile/key handling (mirror the photo-proxy key-safety pattern).
+
+### Launch follow-ups
+Surfaced by the launch-hardening pass (`specs/2026-06-19-launch-hardening-design.md`):
+- **Hard global rate limit** — replace the per-instance in-memory limiter on
+  `/api/assistant` with a shared store (Upstash Redis) if abuse warrants it.
+- **Data coverage rebalance** — neighborhoods are uneven (Logan Square ~20% vs
+  Greektown ~2%); re-ingest with targeted probes or curate thin areas.
+- **"Not for me" signal** — negative-feedback control on the detail page feeding
+  `recommend()` (hinted in CLAUDE.md, not yet wired).
+- **Analytics dashboards** — define funnels/cohorts once `track()` events accrue.
 
 ### Deferred-by-design features
 Named in CLAUDE.md / specs as intentionally not-yet-built:

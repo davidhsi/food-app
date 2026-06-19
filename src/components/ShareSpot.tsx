@@ -1,6 +1,7 @@
 "use client";
 
 import { Restaurant } from "@/lib/types";
+import { track } from "@/lib/analytics";
 import { ShareIcon } from "./icons";
 
 export default function ShareSpot({ restaurant: r }: { restaurant: Restaurant }) {
@@ -10,7 +11,10 @@ export default function ShareSpot({ restaurant: r }: { restaurant: Restaurant })
         ? `${window.location.origin}/restaurant/${r.id}`
         : "";
     const text = `${r.name} — ${r.cuisines.join(", ")} · ${r.neighborhood}. A hidden gem I found on Truffle.`;
-    if (typeof navigator !== "undefined" && navigator.share) {
+    const canShare =
+      typeof navigator !== "undefined" && typeof navigator.share === "function";
+    track("share_spot", { id: r.id, method: canShare ? "web_share" : "clipboard" });
+    if (canShare) {
       navigator.share({ title: r.name, text, url }).catch(() => {});
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(`${text} ${url}`).catch(() => {});

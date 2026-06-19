@@ -6,6 +6,7 @@ import SpotCard from "@/components/SpotCard";
 import { SparkleIcon } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
+import { track } from "@/lib/analytics";
 
 interface Msg {
   role: "user" | "assistant";
@@ -34,6 +35,7 @@ export default function AssistantPage() {
     setInput("");
     setMessages((m) => [...m, { role: "user", text: query }]);
     setLoading(true);
+    track("assistant_query", { length: query.length });
     try {
       const res = await fetch("/api/assistant", {
         method: "POST",
@@ -157,11 +159,14 @@ export default function AssistantPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="What are you in the mood for?"
+              aria-label="Describe what you're craving"
+              enterKeyHint="send"
               className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
+              aria-label="Send"
               className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-olive text-paper disabled:opacity-40"
             >
               ↑

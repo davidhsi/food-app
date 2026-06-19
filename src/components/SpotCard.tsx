@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { gemScore, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
+import { track } from "@/lib/analytics";
 import { BookmarkIcon } from "./icons";
 
 const priceStr = (p: number) => "$".repeat(p);
@@ -42,8 +43,12 @@ export default function SpotCard({ restaurant: r }: { restaurant: Restaurant }) 
       </Link>
       <button
         type="button"
-        onClick={() => toggleSave(r.id)}
-        aria-label={isSaved ? "Saved" : "Save to want to try"}
+        onClick={() => {
+          track("save_toggle", { id: r.id, saved: !isSaved, source: "card" });
+          toggleSave(r.id);
+        }}
+        aria-label={isSaved ? "Remove from want to try" : "Save to want to try"}
+        aria-pressed={isSaved}
         className="absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-paper-raised/90 text-ink backdrop-blur-sm active:scale-90 transition-transform"
       >
         <BookmarkIcon filled={isSaved} width={16} height={16} />

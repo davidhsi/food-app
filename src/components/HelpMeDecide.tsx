@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { recommend } from "@/lib/recommend";
+import { track } from "@/lib/analytics";
 import { SparkleIcon, ArrowRight } from "./icons";
 
 export default function HelpMeDecide() {
@@ -29,7 +30,10 @@ export default function HelpMeDecide() {
       {!open ? (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            track("help_me_decide", pick ? { id: pick.restaurant.id } : undefined);
+            setOpen(true);
+          }}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-olive py-3 text-sm font-semibold text-paper active:scale-[0.98]"
         >
           <SparkleIcon width={17} height={17} /> Can&apos;t decide? Truffle picks tonight

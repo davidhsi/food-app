@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore, DEFAULT_PROFILE } from "@/lib/store";
 import { ALL_CUISINES } from "@/lib/data";
+import { track } from "@/lib/analytics";
 import { Cuisine, Dietary, Price, TasteProfile, Vibe } from "@/lib/types";
 
 const VIBES: { v: Vibe; label: string }[] = [
@@ -207,11 +208,31 @@ export default function Onboarding() {
   const isLast = step === steps.length - 1;
   const cur = steps[step];
 
+  const finish = (skipped: boolean) => {
+    track("onboarding_complete", {
+      skipped,
+      cuisines: p.cuisines.length,
+      vibes: p.vibes.length,
+      undergroundBias: p.undergroundBias,
+    });
+    complete(p);
+    router.replace("/feed");
+  };
+
   return (
     <div className="phone-shell flex flex-col">
       <div className="flex-1 overflow-y-auto px-6 pt-10">
         {step === 0 && (
           <div className="mb-8 animate-floatUp">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mascot-transparent.png"
+              alt=""
+              width={96}
+              height={96}
+              className="mb-3 h-24 w-24 select-none"
+              draggable={false}
+            />
             <div className="font-display text-3xl font-semibold tracking-tight">
               Truffle<span className="text-olive">.</span>
             </div>
@@ -250,10 +271,8 @@ export default function Onboarding() {
           )}
           <button
             onClick={() => {
-              if (isLast) {
-                complete(p);
-                router.replace("/feed");
-              } else setStep(step + 1);
+              if (isLast) finish(false);
+              else setStep(step + 1);
             }}
             className="flex-1 rounded-full bg-olive py-3.5 text-center text-sm font-bold text-paper transition active:scale-[0.98]"
           >
@@ -262,10 +281,7 @@ export default function Onboarding() {
         </div>
         {!isLast && step === 0 && (
           <button
-            onClick={() => {
-              complete(p);
-              router.replace("/feed");
-            }}
+            onClick={() => finish(true)}
             className="mt-2 w-full text-center text-xs text-ink-faint"
           >
             Skip for now

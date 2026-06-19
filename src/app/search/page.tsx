@@ -7,6 +7,7 @@ import { SearchIcon } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { useStore } from "@/lib/store";
+import { track } from "@/lib/analytics";
 import { gemScore, Restaurant } from "@/lib/types";
 
 const TRENDING = [
@@ -90,15 +91,19 @@ export default function SearchPage() {
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(q);
+              if (q.trim()) track("search_submit", { query: q.trim().slice(0, 80) });
             }}
+            role="search"
             className="flex items-center gap-2 rounded-full bg-paper-raised px-4 py-2.5 ring-1 ring-line backdrop-blur-md"
           >
             <SearchIcon width={18} height={18} className="text-ink-faint" />
             <input
+              type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search dishes, vibes, places…"
-              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint focus:ring-0"
+              aria-label="Search dishes, vibes, or places"
+              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
             />
             {q && (
               <button
@@ -107,6 +112,7 @@ export default function SearchPage() {
                   setQ("");
                   setSubmitted("");
                 }}
+                aria-label="Clear search"
                 className="text-ink-faint"
               >
                 ✕

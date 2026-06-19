@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useStore } from "@/lib/store";
+import { track } from "@/lib/analytics";
 import { NEIGHBORHOODS, nearestNeighborhood } from "@/lib/neighborhoods";
 
 /**
@@ -31,10 +32,17 @@ export default function NeighborhoodChips() {
     );
   }, [touched, setNeighborhood]);
 
+  // User-initiated selection (distinct from the silent geolocation pre-select).
+  const select = (name: string | null) => {
+    track("neighborhood_select", { neighborhood: name ?? "anywhere" });
+    setNeighborhood(name);
+  };
+
   const chip = (label: string, active: boolean, onClick: () => void) => (
     <button
       key={label}
       onClick={onClick}
+      aria-pressed={active}
       className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
         active
           ? "bg-olive text-paper"
@@ -46,12 +54,15 @@ export default function NeighborhoodChips() {
   );
 
   return (
-    <div className="no-scrollbar mb-1 flex gap-2 overflow-x-auto px-5 pb-1">
-      {chip("Anywhere", neighborhood === null, () => setNeighborhood(null))}
+    <div
+      className="no-scrollbar mb-1 flex gap-2 overflow-x-auto px-5 pb-1"
+      aria-label="Filter feed by neighborhood"
+    >
+      {chip("Anywhere", neighborhood === null, () => select(null))}
       {NEIGHBORHOODS.map((n) =>
         // Tapping the active chip clears the steer back to "Anywhere".
         chip(n, neighborhood === n, () =>
-          setNeighborhood(neighborhood === n ? null : n),
+          select(neighborhood === n ? null : n),
         ),
       )}
     </div>

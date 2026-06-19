@@ -10,6 +10,35 @@ interface Body {
   profile: TasteProfile;
 }
 
+// Best-effort in-memory rate limit. Caps Claude spend / abuse per client. It's
+// per-instance under Fluid Compute (not globally exact) — swap for a shared
+// store (e.g. Upstash) if a hard global limit is ever needed.
+const RATE_LIMIT = 15; // requests
+const RATE_WINDOW_MS = 60_000; // per minute
+const hits = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = hits.get(ip);
+  if (!entry || now > entry.resetAt) {
+    hits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    if (hits.size > 5000) {
+      // Bound memory: drop expired windows.
+      hits.forEach((v, k) => {
+        if (now > v.resetAt) hits.delete(k);
+      });
+    }
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > RATE_LIMIT;
+}
+
+function clientIp(req: NextRequest): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  return fwd ? fwd.split(",")[0].trim() : "unknown";
+}
+
 /**
  * AI concierge. Uses Claude when ANTHROPIC_API_KEY is set to read the user's
  * natural-language craving + taste profile and pick restaurants with a friendly
@@ -17,6 +46,17 @@ interface Body {
  * the feature always works without a key.
  */
 export async function POST(req: NextRequest) {
+  if (rateLimited(clientIp(req))) {
+    return NextResponse.json(
+      {
+        error: "rate_limited",
+        reply: "You're going fast — give me a moment and try that again.",
+        restaurantIds: [],
+      },
+      { status: 429, headers: { "retry-after": "60" } },
+    );
+  }
+
   let body: Body;
   try {
     body = await req.json();
