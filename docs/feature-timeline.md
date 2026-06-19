@@ -29,9 +29,12 @@ unchanged. Rationale + rejected alternatives:
   and `sanitizePicks` validation untouched.
 - **Small-talk handling (follow-up).** "thanks" / "hey" / "haha you're the best" no longer
   force restaurant cards — a deterministic `conversationalReply` gate (and a matching
-  Claude empty-`restaurantIds` path) returns a warm one-liner with no cards; added an
-  emoji ban + server-side `stripEmoji` (sparing the ★ ◆ ◷ accents). Real cravings still
-  recommend.
+  Claude empty-`restaurantIds` path) returns a warm one-liner with no cards. Real cravings
+  still recommend.
+- **No emoji / no em dashes (follow-up).** Shared `sanitizeReplyText` strips emoji and
+  converts em dashes (a common "AI" tell) to commas on all model output, both prompts ban
+  them, and the hand-written copy pools were rewritten dash-free. (Concierge remains
+  stateless — no conversation memory yet; deferred.)
 
 ## 2026-06-19 — Discovery & navigation UX
 

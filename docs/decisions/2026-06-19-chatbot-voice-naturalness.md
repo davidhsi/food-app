@@ -80,12 +80,19 @@ your message to go on, but…" — because the Claude prompt always required 3�
   `askClaude` surfaces an *intentionally empty* array as a conversational reply, while a
   *non-empty-but-all-invalid* array still falls back to the local engine (the
   hallucination guard is preserved by distinguishing the two).
-- **Emoji ban enforced:** Claude was slipping 😊 into chit-chat. Added "Plain text only —
-  no emoji" to the prompt **and** a server-side `stripEmoji` (surrogate-pair + targeted
-  BMP ranges) that deliberately spares the allowed text accents (★ ◆ ◷ ·). Strip avoids
-  the `u` regex flag (es5 target).
+- **Emoji + em-dash ban (`sanitizeReplyText` in `order.ts`, shared/pure).** Claude was
+  slipping 😊 into chit-chat and leaning on em dashes, which read "AI". Both prompts now
+  say "plain text only: no emoji, no em dashes (use commas/periods)", AND a server-side
+  `sanitizeReplyText` enforces it on all model output (concierge reply + the order
+  guide's `intro`/`why`): strips emoji (surrogate-pair + targeted BMP, sparing ★ ◆ ◷ ·)
+  and converts em dashes → comma (en dashes only when spaced, so "2–3pm" survives). All
+  hand-written copy pools were also rewritten dash-free. Avoids the `u` regex flag (es5).
 - The client already renders cards only when `restaurantIds.length > 0`, so empty replies
   show as a plain bubble — no UI change needed.
+
+**Known limitation (not addressed here):** the concierge is **stateless** — each request
+sends only the query + taste profile, no prior turns, so there is no conversation memory.
+A follow-up could thread recent messages into the prompt; deferred.
 
 ## Status
 

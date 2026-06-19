@@ -51,6 +51,25 @@ export function seededPick<T>(pool: T[], seed: string): T {
   return pool[Math.abs(h) % pool.length];
 }
 
+/**
+ * Normalize model-written copy to the house style: no emoji, and no em/en
+ * dashes (they read "AI"). Em dashes always become a comma; en dashes only when
+ * spaced, so numeric ranges like "2–3" survive. Spares the allowed text accents
+ * (★ ◆ ◷ ·). Pure, so both chat routes share it.
+ */
+export function sanitizeReplyText(s: string): string {
+  return s
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "") // astral emoji (surrogate pairs)
+    .replace(/[✨❤⭐️]/g, "") // a few BMP emoji
+    .replace(/\s*—\s*/g, ", ") // em dash → comma
+    .replace(/\s+–\s+/g, ", ") // spaced en dash → comma (keep "2–3")
+    .replace(/,\s*,/g, ",") // tidy doubled commas
+    .replace(/\s+([.,;:!?])/g, "$1") // tidy space-before-punctuation
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[,\s]+/, "")
+    .trim();
+}
+
 /** Join a list as natural prose: "A", "A and B", "A, B, and C". */
 function joinAnd(items: string[]): string {
   if (items.length <= 1) return items[0] ?? "";
@@ -192,13 +211,13 @@ export function buildLocalOrderGuide(
     : picks.length
       ? seededPick(
           [
-            `A ${priced} spot — here's where I'd start.`,
+            `A ${priced} spot. Here's where I'd start.`,
             `A ${priced} spot; a couple of things stand out.`,
             `For a ${priced} spot, these are the ones to get.`,
           ],
           r.id,
         )
-      : "Ask about today's standout — this spot keeps it seasonal.";
+      : "Ask about today's standout. This spot keeps it seasonal.";
 
   return { intro, picks };
 }
@@ -255,9 +274,9 @@ export function orderGuideToReply(name: string, guide: OrderGuide): string {
   // same way; seeded on the name, so a given spot always reads the same.
   const lead = seededPick(
     [
-      `At ${name}, start with the ${first.dish} — ${first.why}.`,
-      `At ${name}, the ${first.dish} is where I'd begin — ${first.why}.`,
-      `Get the ${first.dish} at ${name} — ${first.why}.`,
+      `At ${name}, start with the ${first.dish}, ${first.why}.`,
+      `At ${name}, the ${first.dish} is where I'd begin, ${first.why}.`,
+      `Get the ${first.dish} at ${name}, ${first.why}.`,
     ],
     name,
   );
@@ -283,7 +302,7 @@ export function orderGuideToReply(name: string, guide: OrderGuide): string {
     `the ${joinAnd(dishes)} might contain ${allergen}`,
   );
   const caution = clauses.length
-    ? ` Heads up: ${joinAnd(clauses)} — confirm with the kitchen.`
+    ? ` Heads up: ${joinAnd(clauses)}. Confirm with the kitchen.`
     : "";
   return lead + more + caution;
 }

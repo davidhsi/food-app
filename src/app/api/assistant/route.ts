@@ -3,7 +3,12 @@ import { RESTAURANTS_FULL } from "@/lib/data.server";
 import { NEIGHBORHOODS } from "@/lib/neighborhoods";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { gemScore, Restaurant, TasteProfile } from "@/lib/types";
-import { buildLocalOrderGuide, orderGuideToReply, seededPick } from "@/lib/order";
+import {
+  buildLocalOrderGuide,
+  orderGuideToReply,
+  sanitizeReplyText,
+  seededPick,
+} from "@/lib/order";
 import { askClaudeOrder } from "@/lib/order.server";
 
 export const runtime = "nodejs";
@@ -55,7 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: "rate_limited",
-        reply: "You're going fast — give me a moment and try that again.",
+        reply: "You're going fast. Give me a moment and try that again.",
         restaurantIds: [],
       },
       { status: 429, headers: { "retry-after": "60" } },
@@ -190,7 +195,7 @@ function conversationalReply(query: string): string | null {
     {
       re: /^(thanks|thank you( so much| very much)?|thx|ty|tysm|appreciate (it|you)|much appreciated|cheers)$/,
       pool: [
-        "Anytime — come back hungry and I'll dig up more.",
+        "Anytime. Come back hungry and I'll dig up more.",
         "Happy to help. Tell me a craving whenever you want the next one.",
         "Of course. Say the word when you're after something else.",
       ],
@@ -198,25 +203,25 @@ function conversationalReply(query: string): string | null {
     {
       re: /^(hi+|hey+|hello+|yo|sup|wassup|what'?s up|howdy|hiya|good (morning|afternoon|evening))$/,
       pool: [
-        "Hey — what are you in the mood for?",
+        "Hey, what are you in the mood for?",
         "Hi! Tell me a craving and I'll find something under the radar.",
-        "Hello — what are you hungry for?",
+        "Hello! What are you hungry for?",
       ],
     },
     {
       re: /^(ok|okay|kk?|cool|nice|great|awesome|amazing|perfect|got it|gotcha|sounds good|word|lol+|haha+|hah|np|no worries)$/,
       pool: [
         "Got it. Say the word when you want another pick.",
-        "Cool — I'm here when the next craving hits.",
+        "Cool. I'm here when the next craving hits.",
         "Anytime. Tell me what you're after and I'll dig something up.",
       ],
     },
     {
       re: /^(bye|goodbye|see ya|see you|later|cya|good ?night|gn)$/,
       pool: [
-        "See you — come back hungry.",
+        "See you. Come back hungry.",
         "Later. I'll have more when you are.",
-        "Take care — I'm here whenever the next craving hits.",
+        "Take care. I'm here whenever the next craving hits.",
       ],
     },
   ];
@@ -230,7 +235,7 @@ function composeLocalReply(
   neighborhood: string | null = null,
 ): string {
   if (top.length === 0)
-    return "I couldn't find a great match for that — try a different craving or cuisine.";
+    return "I couldn't find a great match for that. Try a different craving or cuisine.";
   const first = top[0];
   const r = first.restaurant;
   const gem = gemScore(r) >= 0.55;
@@ -259,12 +264,12 @@ function composeLocalReply(
         ],
         r.id,
       );
-  // Qualitative cue only, never a number — and not when we're sending them
+  // Qualitative cue only, never a number, and not when we're sending them
   // out-of-area as a fallback (claiming a "strong fit" there would be a stretch).
   const fit =
     first.score >= 80 && inArea
       ? seededPick(
-          [" — a strong fit", " — right in your wheelhouse", " — squarely your taste"],
+          [", a strong fit", ", right in your wheelhouse", ", squarely your taste"],
           r.id,
         )
       : "";
@@ -315,8 +320,8 @@ async function askClaude(
     'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
     "VOICE: write the reply like a friend who knows the city — warm, specific, calm. One or two sentences; vary how you open so replies don't all start the same way. Name a dish or work in the insider tip so it reads lived-in. " +
     'NEVER sound like a machine: no percentages or match scores, no "X% match" or "match for your taste", no formulaic openers like "I\'d start with" or "Here are". ' +
-    "Plain text only — no emoji. " +
-    'Example of the voice: "Tucked off Cermak, Mai\'s does a duck larb worth the detour — go early on weekends before the line." ' +
+    "Plain text only: no emoji, and no em dashes (use commas or periods instead). " +
+    'Example of the voice: "Tucked off Cermak, Mai\'s does a duck larb worth the detour. Go early on weekends before the line." ' +
     "restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
 
   const userMsg =
@@ -346,7 +351,7 @@ async function askClaude(
     data?.content?.map((b: any) => b.text).join("") ?? "";
   const json = extractJson(text);
   const reply =
-    typeof json?.reply === "string" ? stripEmoji(json.reply.trim()) : "";
+    typeof json?.reply === "string" ? sanitizeReplyText(json.reply.trim()) : "";
   if (!reply) return null;
 
   // An intentionally empty array = the model judged this conversational (a
@@ -363,23 +368,6 @@ async function askClaude(
   );
   if (!valid.length) return null;
   return { reply, restaurantIds: valid };
-}
-
-/**
- * Strip pictographic emoji from a model reply (the design system is emoji-free).
- * Targets the emoji planes + variation selectors only — leaves the allowed text
- * accents (★ ◆ ◷ ·) and punctuation untouched.
- */
-function stripEmoji(s: string): string {
-  return s
-    // Astral-plane emoji (😊 🔥 🌶 …) arrive as surrogate pairs; no allowed
-    // glyph lives in the astral planes, so this is safe to strip wholesale.
-    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "")
-    // A few BMP emoji + the variation selector. Deliberately NOT the whole
-    // 2600–27BF block, which contains the allowed ★ (U+2605) accent.
-    .replace(/[✨❤⭐️]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
 }
 
 /** Does the query read like "what should I order / get / have"? */
