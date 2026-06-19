@@ -105,8 +105,8 @@ export default function AssistantPage() {
 
   return (
     <AppShell>
-      <div className="flex h-full flex-col bg-paper">
-        <header className="flex items-center gap-2 border-b border-line px-4 py-3.5">
+      <div className="flex h-full flex-col bg-paper pb-[calc(68px_+_env(safe-area-inset-bottom))]">
+        <header className="flex shrink-0 items-center gap-2 border-b border-line px-4 py-3.5">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-olive/15 text-olive">
             <SparkleIcon filled width={20} height={20} />
           </span>
@@ -120,7 +120,7 @@ export default function AssistantPage() {
           </div>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 pb-24">
+        <div className="flex-1 min-h-0 space-y-4 overflow-y-auto px-4 py-5">
           {messages.length === 0 && (
             <div className="mt-6">
               <p className="mt-4 text-center text-sm text-ink-soft">
@@ -194,7 +194,7 @@ export default function AssistantPage() {
             e.preventDefault();
             send(input);
           }}
-          className="absolute bottom-[68px] inset-x-0 border-t border-line bg-paper/90 p-3 backdrop-blur-xl"
+          className="shrink-0 border-t border-line bg-paper/90 p-3 backdrop-blur-xl"
         >
           <div className="flex items-center gap-2 rounded-full bg-paper-raised px-4 py-2 ring-1 ring-line">
             <input
