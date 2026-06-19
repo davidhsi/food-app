@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import SpotCard from "@/components/SpotCard";
 import { SparkleIcon } from "@/components/icons";
@@ -82,6 +82,21 @@ export default function AssistantPage() {
       );
     }
   };
+
+  // Deep-link from search: /assistant?q=... auto-asks the question once on load.
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    const q =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("q")
+        : null;
+    if (q && q.trim()) {
+      didInit.current = true;
+      send(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AppShell>

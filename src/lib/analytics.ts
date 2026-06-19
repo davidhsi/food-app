@@ -14,6 +14,7 @@ export type AnalyticsEvent =
   | "rank_complete"
   | "share_spot"
   | "search_submit"
+  | "search_to_concierge"
   | "assistant_query"
   | "help_me_decide"
   | "neighborhood_select";

@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import SpotCard from "@/components/SpotCard";
-import { SearchIcon, XIcon } from "@/components/icons";
+import Link from "next/link";
+import { SearchIcon, XIcon, SparkleIcon, ArrowRight } from "@/components/icons";
 import { RESTAURANTS, ALL_CUISINES } from "@/lib/data";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { useStore } from "@/lib/store";
@@ -45,6 +46,7 @@ export default function SearchPage() {
     let pool = RESTAURANTS;
     if (cuisine) pool = pool.filter((r) => r.cuisines.includes(cuisine as any));
     const parsed = active ? parseQuery(active) : { keywords: [] };
+    let fallback = false;
     if (active) {
       const direct = pool.filter((r) => matches(r, active));
       const byParse = pool.filter((r) => {
@@ -56,7 +58,14 @@ export default function SearchPage() {
       // For underground-intent queries (e.g. "hidden gems"), rank the whole
       // pool by taste rather than returning nothing.
       const undergroundIntent = (parsed.undergroundBias ?? 0) >= 0.5;
-      pool = merged.length ? merged : undergroundIntent ? pool : [];
+      if (merged.length) {
+        pool = merged;
+      } else if (!undergroundIntent) {
+        // No literal match (e.g. a full question like "what to eat around me").
+        // Don't dead-end — keep the full pool, rank it by taste, and flag it so
+        // the UI is honest that these are recommendations, not exact matches.
+        fallback = true;
+      }
     }
 
     // If the query named an area ("chinese in Lakeview"), steer hard toward it
@@ -79,7 +88,7 @@ export default function SearchPage() {
       },
       pool,
     );
-    return scored;
+    return { list: scored, fallback };
   }, [submitted, cuisine, store.profile, store.liked, store.saved, store.ranked]);
 
   const runQuery = (t: string) => {
@@ -87,6 +96,22 @@ export default function SearchPage() {
     setSubmitted(t);
     track("search_submit", { query: t.slice(0, 80) });
   };
+
+  // Hand-off to the AI concierge for open-ended questions search can't answer
+  // literally. Pre-fills the query so the concierge answers it on arrival.
+  const conciergeHandoff = (query: string) => (
+    <Link
+      href={`/assistant?q=${encodeURIComponent(query)}`}
+      onClick={() => track("search_to_concierge", { query: query.slice(0, 80) })}
+      className="mt-3 flex items-center gap-2 rounded-2xl bg-olive px-4 py-3 text-left text-sm font-semibold text-paper active:scale-[0.98]"
+    >
+      <SparkleIcon width={17} height={17} className="shrink-0" />
+      <span className="min-w-0 flex-1 truncate">
+        Ask the concierge about &ldquo;{query}&rdquo;
+      </span>
+      <ArrowRight width={16} height={16} className="shrink-0" />
+    </Link>
+  );
 
   // Discovery blocks shown both before a search and as a recovery path when a
   // search returns nothing — so the dead end always offers somewhere to go.
@@ -187,16 +212,29 @@ export default function SearchPage() {
         {/* Body */}
         {results ? (
           <div className="h-full overflow-y-auto px-4 pb-24 pt-32">
-            {results.length === 0 ? (
+            {results.list.length === 0 ? (
               <div className="px-1">
                 <p className="pt-2 text-center text-sm text-ink-soft">
                   No matches for &quot;{submitted}&quot;. Here&apos;s where to look
                   instead.
                 </p>
+                {submitted.trim() && conciergeHandoff(submitted.trim())}
                 <div className="mt-6">{discovery}</div>
               </div>
             ) : (
-              results.map((s) => <SpotCard key={s.restaurant.id} restaurant={s.restaurant} />)
+              <>
+                {results.fallback && (
+                  <div className="mb-5">
+                    <p className="text-sm text-ink-soft">
+                      No exact matches — here&apos;s what we&apos;d recommend.
+                    </p>
+                    {submitted.trim() && conciergeHandoff(submitted.trim())}
+                  </div>
+                )}
+                {results.list.map((s) => (
+                  <SpotCard key={s.restaurant.id} restaurant={s.restaurant} />
+                ))}
+              </>
             )}
           </div>
         ) : (
