@@ -27,6 +27,11 @@ unchanged. Rationale + rejected alternatives:
 - **Re-voiced both Claude prompts** (`askClaude`, `askClaudeOrder`) with shared voice
   guidance, a voice example, and an explicit ban on machine tells; STRICT-JSON contract
   and `sanitizePicks` validation untouched.
+- **Small-talk handling (follow-up).** "thanks" / "hey" / "haha you're the best" no longer
+  force restaurant cards — a deterministic `conversationalReply` gate (and a matching
+  Claude empty-`restaurantIds` path) returns a warm one-liner with no cards; added an
+  emoji ban + server-side `stripEmoji` (sparing the ★ ◆ ◷ accents). Real cravings still
+  recommend.
 
 ## 2026-06-19 — Discovery & navigation UX
 

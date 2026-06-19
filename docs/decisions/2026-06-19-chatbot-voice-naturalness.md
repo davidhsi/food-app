@@ -64,8 +64,33 @@ those same tells. Goal: make both engines read like a friend who knows the city,
   prompt + few-shot example are the primary lever and the local seeding already supplies
   variety; a temperature change is held as a future option if outputs read too same-y.
 
+## Follow-up: small-talk handling (same day)
+
+Testing surfaced a related un-naturalness: the concierge **forced restaurant picks for
+non-requests**. Saying "thanks" returned recommendations with an awkward "Nothing in
+your message to go on, but…" — because the Claude prompt always required 3–4 picks.
+
+- **Deterministic conversational gate** (`conversationalReply` in `assistant/route.ts`):
+  pure social messages (greeting / thanks / acknowledgment / sign-off) get a warm,
+  seeded one-liner and an **empty** `restaurantIds` (no cards), short-circuiting before
+  recommend/Claude. Match is anchored to the whole message, so "thanks, now find tacos"
+  is **not** swallowed.
+- **Claude belt-and-suspenders:** the prompt now tells the model to reply in one short
+  line with an empty `restaurantIds` when the message isn't a recommendation request;
+  `askClaude` surfaces an *intentionally empty* array as a conversational reply, while a
+  *non-empty-but-all-invalid* array still falls back to the local engine (the
+  hallucination guard is preserved by distinguishing the two).
+- **Emoji ban enforced:** Claude was slipping 😊 into chit-chat. Added "Plain text only —
+  no emoji" to the prompt **and** a server-side `stripEmoji` (surrogate-pair + targeted
+  BMP ranges) that deliberately spares the allowed text accents (★ ◆ ◷ ·). Strip avoids
+  the `u` regex flag (es5 target).
+- The client already renders cards only when `restaurantIds.length > 0`, so empty replies
+  show as a plain bubble — no UI change needed.
+
 ## Status
 
 Shipped. Verified by `npm run typecheck && npm run build`, a throwaway keyless render
-probe (deleted), and end-to-end curls of `/api/assistant` confirming the local path
-reads natural with no percentages.
+probe (deleted), and end-to-end curls of `/api/assistant` — confirming the local path
+reads natural with no percentages, and that small talk ("thanks", "hey", "haha you're
+the best") returns a warm one-liner with no cards and no emoji, while real cravings
+("spicy ramen", "thanks, now find tacos") still recommend.

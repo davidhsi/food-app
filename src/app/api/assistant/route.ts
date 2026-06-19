@@ -73,6 +73,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "empty query" }, { status: 400 });
   }
 
+  // Pure small talk ("thanks", "hi", "cool") isn't a recommendation request —
+  // reply warmly and DON'T throw restaurant cards at it. Deterministic so it
+  // behaves the same with or without a key (and skips a needless Claude call).
+  const small = conversationalReply(query);
+  if (small) {
+    return NextResponse.json({ reply: small, restaurantIds: [], engine: "local" });
+  }
+
   // "What should I order at X?" — if the query is an ordering question and names
   // a real restaurant, answer with a dish guide instead of recommending spots.
   // Shares the same engine as the detail page's /api/order (see lib/order*).
@@ -168,6 +176,54 @@ export async function POST(req: NextRequest) {
   });
 }
 
+/**
+ * If the message is purely social — a greeting, thanks, an acknowledgment, or a
+ * sign-off — return a warm one-liner (no restaurant cards). Returns null for
+ * anything that might be a real craving, so genuine queries fall through. Match
+ * is anchored to the WHOLE message (punctuation stripped), so "thanks, now find
+ * tacos" is NOT treated as small talk. Seeded on the message so a given input
+ * reads consistently (calm, not random).
+ */
+function conversationalReply(query: string): string | null {
+  const q = query.trim().toLowerCase().replace(/[\s!.…,?]+$/g, "");
+  const KINDS: { re: RegExp; pool: string[] }[] = [
+    {
+      re: /^(thanks|thank you( so much| very much)?|thx|ty|tysm|appreciate (it|you)|much appreciated|cheers)$/,
+      pool: [
+        "Anytime — come back hungry and I'll dig up more.",
+        "Happy to help. Tell me a craving whenever you want the next one.",
+        "Of course. Say the word when you're after something else.",
+      ],
+    },
+    {
+      re: /^(hi+|hey+|hello+|yo|sup|wassup|what'?s up|howdy|hiya|good (morning|afternoon|evening))$/,
+      pool: [
+        "Hey — what are you in the mood for?",
+        "Hi! Tell me a craving and I'll find something under the radar.",
+        "Hello — what are you hungry for?",
+      ],
+    },
+    {
+      re: /^(ok|okay|kk?|cool|nice|great|awesome|amazing|perfect|got it|gotcha|sounds good|word|lol+|haha+|hah|np|no worries)$/,
+      pool: [
+        "Got it. Say the word when you want another pick.",
+        "Cool — I'm here when the next craving hits.",
+        "Anytime. Tell me what you're after and I'll dig something up.",
+      ],
+    },
+    {
+      re: /^(bye|goodbye|see ya|see you|later|cya|good ?night|gn)$/,
+      pool: [
+        "See you — come back hungry.",
+        "Later. I'll have more when you are.",
+        "Take care — I'm here whenever the next craving hits.",
+      ],
+    },
+  ];
+  for (const k of KINDS) if (k.re.test(q)) return seededPick(k.pool, q);
+  return null;
+}
+
 function composeLocalReply(
   query: string,
   top: ReturnType<typeof recommend>,
@@ -248,7 +304,8 @@ async function askClaude(
   const leanUnderground = (profile.undergroundBias ?? 0.7) >= 0.5;
   const system =
     "You are Truffle's food concierge. Truffle is about discovering UNDER-THE-RADAR spots before everyone else. " +
-    "From the candidate restaurants ONLY, pick the 3-4 best for the user's request and taste profile. " +
+    "If the message isn't actually a request for a recommendation — a greeting, a thanks, an acknowledgment, or small talk — reply warmly in ONE short sentence and return an EMPTY restaurantIds array. Do not force picks or invent a craving the user didn't express. " +
+    "Otherwise, from the candidate restaurants ONLY, pick the 3-4 best for the user's request and taste profile. " +
     (leanUnderground
       ? "Favor hidden gems (low `buzz`, high `gem`) over obvious tourist hotspots unless the user explicitly asks for famous/popular places. When you pick a gem, work its insiderTip into the reply. "
       : "") +
@@ -258,6 +315,7 @@ async function askClaude(
     'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
     "VOICE: write the reply like a friend who knows the city — warm, specific, calm. One or two sentences; vary how you open so replies don't all start the same way. Name a dish or work in the insider tip so it reads lived-in. " +
     'NEVER sound like a machine: no percentages or match scores, no "X% match" or "match for your taste", no formulaic openers like "I\'d start with" or "Here are". ' +
+    "Plain text only — no emoji. " +
     'Example of the voice: "Tucked off Cermak, Mai\'s does a duck larb worth the detour — go early on weekends before the line." ' +
     "restaurantIds must be ids from the candidates, best first. No prose outside JSON.";
 
@@ -287,14 +345,41 @@ async function askClaude(
   const text: string =
     data?.content?.map((b: any) => b.text).join("") ?? "";
   const json = extractJson(text);
-  if (!json?.restaurantIds?.length) return null;
+  const reply =
+    typeof json?.reply === "string" ? stripEmoji(json.reply.trim()) : "";
+  if (!reply) return null;
 
-  // Validate ids against the real dataset.
-  const valid = json.restaurantIds.filter((id: string) =>
-    RESTAURANTS_FULL.some((r) => r.id === id),
+  // An intentionally empty array = the model judged this conversational (a
+  // greeting/thanks/etc.). Surface the warm one-liner with no cards.
+  if (Array.isArray(json.restaurantIds) && json.restaurantIds.length === 0) {
+    return { reply, restaurantIds: [] };
+  }
+
+  // Otherwise validate ids against the real dataset. A non-empty array with no
+  // valid ids is a hallucinated/malformed pick — return null so the caller
+  // falls back to the local engine (which gives real cards).
+  const valid = (Array.isArray(json.restaurantIds) ? json.restaurantIds : []).filter(
+    (id: string) => RESTAURANTS_FULL.some((r) => r.id === id),
   );
   if (!valid.length) return null;
-  return { reply: String(json.reply ?? ""), restaurantIds: valid };
+  return { reply, restaurantIds: valid };
+}
+
+/**
+ * Strip pictographic emoji from a model reply (the design system is emoji-free).
+ * Targets the emoji planes + variation selectors only — leaves the allowed text
+ * accents (★ ◆ ◷ ·) and punctuation untouched.
+ */
+function stripEmoji(s: string): string {
+  return s
+    // Astral-plane emoji (😊 🔥 🌶 …) arrive as surrogate pairs; no allowed
+    // glyph lives in the astral planes, so this is safe to strip wholesale.
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "")
+    // A few BMP emoji + the variation selector. Deliberately NOT the whole
+    // 2600–27BF block, which contains the allowed ★ (U+2605) accent.
+    .replace(/[✨❤⭐️]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 /** Does the query read like "what should I order / get / have"? */
