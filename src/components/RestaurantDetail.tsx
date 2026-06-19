@@ -67,8 +67,9 @@ export default function RestaurantDetail({
   return (
     <div className="phone-shell bg-paper">
       {/* `.phone-shell` is `overflow:hidden`; scroll on an inner inset child
-          (same pattern as AppShell) so the detail content can scroll. */}
-      <div className="absolute inset-0 overflow-y-auto pb-10">
+          (same pattern as AppShell) so the detail content can scroll. While the
+          rank modal is open we freeze this scroller so the page behind stays put. */}
+      <div className={`absolute inset-0 pb-10 ${ranking ? "overflow-hidden" : "overflow-y-auto"}`}>
       {/* Hero */}
       <div className="relative h-[44%] min-h-[300px] bg-line">
         {poster && (
@@ -157,19 +158,25 @@ export default function RestaurantDetail({
       </div>
 
       {/* Why you */}
-      {scored && scored.reasons.length > 0 && (
+      {scored && (
         <div className="px-5">
           <h2 className="text-sm font-semibold text-ink-faint">Why you&apos;ll like it</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {scored.reasons.map((why) => (
-              <span
-                key={why.label}
-                className="rounded-full bg-paper-raised px-3 py-1.5 text-xs font-medium text-ink-soft ring-1 ring-line"
-              >
-                {why.label.replace(/\s*🌶️/g, "").replace(/\s*💎/g, "").trim()}
-              </span>
-            ))}
-          </div>
+          {scored.reasons.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {scored.reasons.map((why) => (
+                <span
+                  key={why.label}
+                  className="rounded-full bg-paper-raised px-3 py-1.5 text-xs font-medium text-ink-soft ring-1 ring-line"
+                >
+                  {why.label.replace(/\s*🌶️/g, "").replace(/\s*💎/g, "").trim()}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-ink-soft">
+              A quiet pick that fits the kind of spots you lean toward.
+            </p>
+          )}
         </div>
       )}
 

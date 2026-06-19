@@ -1,19 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import SpotCard from "@/components/SpotCard";
 import { SparkleIcon } from "@/components/icons";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
+import { resolveNearbyNeighborhood } from "@/lib/neighborhoods";
+import { parseQuery } from "@/lib/recommend";
+import { useScrollRestoration } from "@/lib/useScrollRestoration";
 import { track } from "@/lib/analytics";
-
-interface Msg {
-  role: "user" | "assistant";
-  text: string;
-  restaurantIds?: string[];
-  engine?: string;
-}
 
 const SUGGESTIONS = [
   "Find me a hidden gem for dinner tonight",
@@ -24,10 +20,14 @@ const SUGGESTIONS = [
 
 export default function AssistantPage() {
   const profile = useStore((s) => s.profile);
-  const [messages, setMessages] = useState<Msg[]>([]);
+  // Conversation lives in the store so it survives navigating into a restaurant
+  // and back (in-memory only — a fresh app open starts empty).
+  const messages = useStore((s) => s.assistantMessages);
+  const setMessages = useStore((s) => s.setAssistantMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useScrollRestoration<HTMLDivElement>("assistant");
 
   const send = async (q: string) => {
     const query = q.trim();
@@ -37,12 +37,31 @@ export default function AssistantPage() {
     setLoading(true);
     track("assistant_query", { length: query.length });
     try {
+      // For "near me" queries, resolve the user's neighborhood so the API can
+      // steer toward it. Fail-silent (null) if denied/unavailable.
+      const nearNeighborhood = parseQuery(query).nearMe
+        ? await resolveNearbyNeighborhood()
+        : null;
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query, profile }),
+        body: JSON.stringify({ query, profile, nearNeighborhood }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            text:
+              res.status === 429
+                ? data?.reply ??
+                  "I'm fielding a lot of requests right now — give it a few seconds and try again."
+                : "Something went wrong on my end — try again in a moment.",
+          },
+        ]);
+        return;
+      }
       setMessages((m) => [
         ...m,
         {
@@ -55,7 +74,10 @@ export default function AssistantPage() {
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: "Something went wrong — try again." },
+        {
+          role: "assistant",
+          text: "I couldn't reach the server — check your connection and try again.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -66,10 +88,27 @@ export default function AssistantPage() {
     }
   };
 
+  // Deep-link from search: /assistant?q=... auto-asks the question once on load.
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    const q =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("q")
+        : null;
+    if (q && q.trim()) {
+      didInit.current = true;
+      send(q);
+      // Strip ?q so returning here (e.g. back from a restaurant) doesn't re-ask.
+      window.history.replaceState(null, "", "/assistant");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <AppShell>
-      <div className="flex h-full flex-col bg-paper">
-        <header className="flex items-center gap-2 border-b border-line px-4 py-3.5">
+      <div className="flex h-full flex-col bg-paper pb-[calc(68px_+_env(safe-area-inset-bottom))]">
+        <header className="flex shrink-0 items-center gap-2 border-b border-line px-4 py-3.5">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-olive/15 text-olive">
             <SparkleIcon filled width={20} height={20} />
           </span>
@@ -83,7 +122,10 @@ export default function AssistantPage() {
           </div>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 pb-24">
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 space-y-4 overflow-y-auto px-4 py-5"
+        >
           {messages.length === 0 && (
             <div className="mt-6">
               <p className="mt-4 text-center text-sm text-ink-soft">
@@ -138,7 +180,12 @@ export default function AssistantPage() {
           ))}
 
           {loading && (
-            <div className="flex items-center gap-1.5 text-ink-faint">
+            <div
+              role="status"
+              aria-live="polite"
+              aria-label="Finding spots for you"
+              className="flex items-center gap-1.5 text-ink-faint"
+            >
               <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint [animation-delay:-0.2s]" />
               <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint [animation-delay:-0.1s]" />
               <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint" />
@@ -152,12 +199,24 @@ export default function AssistantPage() {
             e.preventDefault();
             send(input);
           }}
-          className="absolute bottom-[68px] inset-x-0 border-t border-line bg-paper/90 p-3 backdrop-blur-xl"
+          className="shrink-0 border-t border-line bg-paper/90 p-3 backdrop-blur-xl"
         >
           <div className="flex items-center gap-2 rounded-full bg-paper-raised px-4 py-2 ring-1 ring-line">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onFocus={() =>
+                // Let the on-screen keyboard animate in, then bring the latest
+                // content (and this input) above it.
+                setTimeout(
+                  () =>
+                    endRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "end",
+                    }),
+                  300,
+                )
+              }
               placeholder="What are you in the mood for?"
               aria-label="Describe what you're craving"
               enterKeyHint="send"

@@ -6,6 +6,7 @@ import Image from "next/image";
 import AppShell from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
+import { useScrollRestoration } from "@/lib/useScrollRestoration";
 import { StarIcon, XIcon } from "@/components/icons";
 
 function scoreColor(s: number) {
@@ -18,6 +19,7 @@ function scoreColor(s: number) {
 export default function ProfilePage() {
   const { profile, ranked, saved, liked, reset, removeRanked } = useStore();
   const [tab, setTab] = useState<"been" | "want">("been");
+  const scrollRef = useScrollRestoration<HTMLDivElement>("profile");
 
   const beenSorted = useMemo(
     () => [...ranked].sort((a, b) => b.score - a.score),
@@ -26,7 +28,7 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="h-full overflow-y-auto pb-24 bg-paper">
+      <div ref={scrollRef} className="h-full overflow-y-auto pb-24 bg-paper">
         {/* Header */}
         <div className="bg-gradient-to-b from-olive/20 to-transparent px-5 pt-10 pb-4">
           <div className="flex items-center gap-4">

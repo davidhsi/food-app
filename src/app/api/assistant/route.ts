@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RESTAURANTS_FULL } from "@/lib/data.server";
+import { NEIGHBORHOODS } from "@/lib/neighborhoods";
 import { parseQuery, recommend } from "@/lib/recommend";
 import { gemScore, Restaurant, TasteProfile } from "@/lib/types";
 import { buildLocalOrderGuide, orderGuideToReply } from "@/lib/order";
@@ -10,6 +11,8 @@ export const runtime = "nodejs";
 interface Body {
   query: string;
   profile: TasteProfile;
+  // Client-resolved nearest neighborhood, sent only for "near me" queries.
+  nearNeighborhood?: string | null;
 }
 
 // Best-effort in-memory rate limit. Caps Claude spend / abuse per client. It's
@@ -113,8 +116,16 @@ export async function POST(req: NextRequest) {
   };
   // If the user named a neighborhood ("chinese in Lakeview"), steer the
   // candidate pool hard toward it so both the LLM and the local fallback pick
-  // from the right area instead of the city-wide best match.
-  const neighborhood = parsed.neighborhood ?? null;
+  // from the right area instead of the city-wide best match. A "near me" query
+  // instead uses the client-resolved neighborhood (validated against the real
+  // set, since it's user-supplied).
+  const near =
+    parsed.nearMe &&
+    body.nearNeighborhood &&
+    NEIGHBORHOODS.includes(body.nearNeighborhood)
+      ? body.nearNeighborhood
+      : null;
+  const neighborhood = parsed.neighborhood ?? near;
   // Score against the FULL dataset so candidates carry the detail-only editorial
   // (insiderTip/blurb) the reply and Claude prompt use — these aren't in `core`.
   const localScored = recommend(

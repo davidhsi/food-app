@@ -48,3 +48,24 @@ export function nearestNeighborhood(lat: number, lng: number): string {
   }
   return best;
 }
+
+/**
+ * Resolve the user's current position to the nearest known neighborhood via the
+ * browser. Client-only (touches `navigator` at call time); resolves null when
+ * geolocation is unavailable, denied, or times out so callers fall back to no
+ * location steer. Mirrors NeighborhoodChips' fail-silent read.
+ */
+export function resolveNearbyNeighborhood(): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        resolve(nearestNeighborhood(pos.coords.latitude, pos.coords.longitude)),
+      () => resolve(null),
+      { maximumAge: 300000, timeout: 5000 },
+    );
+  });
+}

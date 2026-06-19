@@ -220,13 +220,26 @@ export function recommend(
 export function parseQuery(q: string): Partial<TasteProfile> & {
   keywords: string[];
   neighborhood?: string;
+  nearMe?: boolean;
 } {
   const text = q.toLowerCase();
   const keywords = text.split(/[^a-z]+/).filter(Boolean);
   const profile: Partial<TasteProfile> & {
     keywords: string[];
     neighborhood?: string;
+    nearMe?: boolean;
   } = { keywords };
+
+  // "near me" / "around here" intent — pure detection only. The caller resolves
+  // the actual location (browser geolocation) and supplies the resulting
+  // neighborhood as the steer, so this stays isomorphic.
+  if (
+    /\b(near|around|close to|next to)\s+(me|here|us)\b|\bnear\s?by\b|\bclose\s?by\b|\baround\s+here\b/.test(
+      text,
+    )
+  ) {
+    profile.nearMe = true;
+  }
 
   // Neighborhood mention — match against the real neighborhoods in the data.
   // Longest name first so multi-word areas ("West Loop", "Logan Square") win

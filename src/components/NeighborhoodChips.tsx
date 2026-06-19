@@ -38,11 +38,17 @@ export default function NeighborhoodChips() {
     setNeighborhood(name);
   };
 
-  const chip = (label: string, active: boolean, onClick: () => void) => (
+  const chip = (
+    label: string,
+    active: boolean,
+    onClick: () => void,
+    clearable = false,
+  ) => (
     <button
       key={label}
       onClick={onClick}
       aria-pressed={active}
+      aria-label={active && clearable ? `${label} — tap to clear` : undefined}
       className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
         active
           ? "bg-olive text-paper"
@@ -50,19 +56,27 @@ export default function NeighborhoodChips() {
       }`}
     >
       {label}
+      {active && clearable && (
+        <span aria-hidden="true" className="ml-1 opacity-80">
+          ×
+        </span>
+      )}
     </button>
   );
 
   return (
     <div
-      className="no-scrollbar mb-1 flex gap-2 overflow-x-auto px-5 pb-1"
+      className="no-scrollbar mb-1 flex gap-2 overflow-x-auto px-5 pb-1 [mask-image:linear-gradient(to_right,black_92%,transparent)]"
       aria-label="Filter feed by neighborhood"
     >
       {chip("Anywhere", neighborhood === null, () => select(null))}
       {NEIGHBORHOODS.map((n) =>
         // Tapping the active chip clears the steer back to "Anywhere".
-        chip(n, neighborhood === n, () =>
-          select(neighborhood === n ? null : n),
+        chip(
+          n,
+          neighborhood === n,
+          () => select(neighborhood === n ? null : n),
+          true,
         ),
       )}
     </div>

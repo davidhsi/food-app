@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getRestaurant } from "@/lib/data";
+import { getFullRestaurant } from "@/lib/data.server";
 import { gemScore } from "@/lib/types";
 import { photoMediaUrl } from "../../../../scripts/places";
 
@@ -40,7 +40,7 @@ async function loadPhoto(poster?: string): Promise<string | null> {
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
-  const r = getRestaurant(params.id);
+  const r = getFullRestaurant(params.id);
   if (!r) {
     return new ImageResponse(
       (
@@ -178,6 +178,23 @@ export default async function Image({ params }: { params: { id: string } }) {
           >
             {meta}
           </div>
+          {r.insiderTip && (
+            <div
+              style={{
+                display: "flex",
+                marginTop: 16,
+                fontSize: 26,
+                color: GEM,
+                opacity: 0.95,
+                maxWidth: 1000,
+                lineHeight: 1.3,
+              }}
+            >
+              {r.insiderTip.length > 110
+                ? `${r.insiderTip.slice(0, 108).trimEnd()}…`
+                : r.insiderTip}
+            </div>
+          )}
         </div>
         {/* Olive accent bar */}
         <div
