@@ -23,7 +23,8 @@ Superseded by …).
 |---|---|---|
 | 2026-06-17 | [Data storage: no DB/warehouse yet + the future-DB seam & triggers](../../planning/2026-06-17-data-storage-db-assessment.md) | Shipped |
 | 2026-06-19 | [Ordering & dish guidance — "what should I order here?" (request-time, no live voting)](./2026-06-19-ordering-and-dish-guidance.md) | Shipped |
-| 2026-06-19 | [Discovery & navigation UX — search ↔ concierge, "near me", navigation state](./2026-06-19-discovery-and-navigation-ux.md) | Shipped |
+| 2026-06-19 | [Discovery & navigation UX — search ↔ concierge, "near me", navigation state](./2026-06-19-discovery-and-navigation-ux.md) | §1 refined by Discover-home merge |
+| 2026-06-19 | [Merge Feed + Search into one editorial "Discover" home](./2026-06-19-discover-home-merge.md) | Shipped |
 | 2026-06-19 | [Chatbot voice — naturalness across both engines (seeded variation, no machine tells)](./2026-06-19-chatbot-voice-naturalness.md) | Shipped |
 | 2026-06-19 | [Concierge conversation memory — stateless server, client-held history, merged intent](./2026-06-19-concierge-conversation-memory.md) | Shipped |
 | 2026-06-19 | [Personal Map view — phone-native map of your spots + nearby gems (Leaflet + CARTO)](./2026-06-19-personal-map.md) | Shipped |

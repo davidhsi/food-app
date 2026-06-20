@@ -6,6 +6,20 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-19 — Discover home (Feed + Search merged)
+
+Replaced the flat `/feed` and the standalone `/search` tab with **one editorial
+"Discover" home**. Browse mode shows a **hero** ("Tonight's gem"), `HelpMeDecide`, and
+personalized **carousels** — `In {neighborhood}`, `Because you saved {X}`,
+`More {cuisine} you'd love`, `Under the radar` — over a paginated "More to discover"
+tail. A sticky search bar flips it into the prior search-results behavior (with the
+concierge hand-off for conversational queries). Every shelf is a slice of the existing
+`recommend()`/`gemScore` — **no new scoring**; new code is `src/lib/shelves.ts` +
+`src/components/discover/{SearchBar,Shelf,ShelfCard,HeroSpot}.tsx`. Bottom nav drops to
+4 tabs (Discover · Map · AI · You); `/search` redirects to `/feed`.
+Spec: [`specs/2026-06-19-discover-home-design.md`](superpowers/specs/2026-06-19-discover-home-design.md);
+decision: [`decisions/2026-06-19-discover-home-merge.md`](decisions/2026-06-19-discover-home-merge.md).
+
 ## 2026-06-19 — Personal Map view
 
 A new **Map** tab (`/map`, 5th in the bottom nav) showing a calm, personal map: your
