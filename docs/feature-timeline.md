@@ -6,6 +6,23 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-20 — "Open now" concierge awareness
+
+The AI concierge and detail page now know whether a spot is open right now. A real
+Google Places re-ingest added `regularOpeningHours` + `utcOffsetMinutes`, derived at
+ingest into a normalized `OpeningHours` shape (`scripts/derive.ts` `hoursFrom`). A pure
+`src/lib/hours.ts` `isOpenNow(hours, nowMs)` judges each venue against **its own** UTC
+offset (handles overnight, week-wrap, and 24/7). `parseQuery()` detects "open now"
+intent; the scorer **boosts open / demotes closed** as a steer (never a hard filter,
+never penalizes unknown hours). The concierge threads open/closed into the Claude prompt
+and keyless local reply, always with an honest "going by Google's hours, confirm with the
+spot" caveat. The detail page shows a `● Open now / ○ Closed · today's hours` line.
+`hours` is **server-`full` only** (stripped from client `core`, like `insiderTip`/`blurb`).
+Completes the two-feature idea brainstormed alongside the Personal Map.
+Spec: [`specs/2026-06-20-open-now-concierge-design.md`](superpowers/specs/2026-06-20-open-now-concierge-design.md);
+plan: [`plans/2026-06-20-open-now-concierge.md`](superpowers/plans/2026-06-20-open-now-concierge.md);
+decision: [`decisions/2026-06-20-open-now-concierge.md`](decisions/2026-06-20-open-now-concierge.md).
+
 ## 2026-06-19 — Discover home (Feed + Search merged)
 
 Replaced the flat `/feed` and the standalone `/search` tab with **one editorial
