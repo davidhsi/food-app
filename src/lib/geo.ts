@@ -1,3 +1,10 @@
+/**
+ * Chicago city-center reference (the Loop) — the same origin the ingest pipeline
+ * uses for `distanceKm` (see `scripts/neighborhoods.ts`). Client-safe; used as
+ * the map's fallback center when geolocation is unavailable.
+ */
+export const CHICAGO_CENTER = { lat: 41.8786, lng: -87.6251 };
+
 /** Great-circle distance in kilometers between two lat/lng points. */
 export function haversineKm(
   aLat: number,

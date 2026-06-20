@@ -6,6 +6,19 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-19 — Personal Map view
+
+A new **Map** tab (`/map`, 5th in the bottom nav) showing a calm, personal map: your
+**saved** and **been** spots always, plus the top **nearby gems** around you. Built on
+**Leaflet + CARTO light tiles** (no API key), dynamically imported `ssr:false` so the
+heavy chunk stays off the route (`/map` First Load JS ~101 kB). Geolocation centers on
+you with neighborhood/city fallbacks; tapping a pin raises a compact card (★ rating, ◆
+gem, your rank for been spots) with a save toggle and a link to detail. divIcon markers
+use Tailwind tokens, so the CARTO basemap is the only third-party-styled surface.
+Spec: [`specs/2026-06-19-personal-map-design.md`](superpowers/specs/2026-06-19-personal-map-design.md);
+decision: [`decisions/2026-06-19-personal-map.md`](decisions/2026-06-19-personal-map.md).
+"Open now" concierge awareness was brainstormed alongside but split out (needs a hours re-ingest).
+
 ## 2026-06-19 — Concierge reply formatting (scannable list)
 
 A readability pass on the concierge chat replies: instead of a wall of prose, each

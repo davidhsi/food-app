@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, SearchIcon, SparkleIcon, UserIcon } from "./icons";
+import { HomeIcon, PinIcon, SearchIcon, SparkleIcon, UserIcon } from "./icons";
 
 const tabs = [
   { href: "/feed", label: "Feed", Icon: HomeIcon },
   { href: "/search", label: "Search", Icon: SearchIcon },
+  { href: "/map", label: "Map", Icon: PinIcon },
   { href: "/assistant", label: "AI", Icon: SparkleIcon },
   { href: "/profile", label: "You", Icon: UserIcon },
 ];

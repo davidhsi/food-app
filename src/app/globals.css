@@ -38,6 +38,30 @@ body {
   }
 }
 
+/* Leaflet chrome, retoned to the Warm Editorial palette (semantic tokens
+   mirror tailwind.config.ts: paper #F4F1E8, paper-raised #FBF9F2, ink #1d2014,
+   ink-faint #8c9072, line #d9d6c8). The CARTO basemap tiles are the only
+   intentionally third-party-styled surface. */
+.leaflet-container {
+  font-family: inherit;
+  background: #f4f1e8;
+}
+.leaflet-container a {
+  color: #5c6b2e; /* olive */
+}
+.leaflet-control-attribution {
+  background: rgba(251, 249, 242, 0.85); /* paper-raised */
+  color: #8c9072; /* ink-faint */
+  font-size: 10px;
+  border-top-left-radius: 8px;
+  border: 1px solid #d9d6c8; /* line */
+  border-right: none;
+  border-bottom: none;
+}
+.leaflet-control-attribution a {
+  color: #8c9072;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -17,7 +17,9 @@ export type AnalyticsEvent =
   | "search_to_concierge"
   | "assistant_query"
   | "help_me_decide"
-  | "neighborhood_select";
+  | "neighborhood_select"
+  | "map_open"
+  | "map_pin_tap";
 
 type Props = Record<string, string | number | boolean | null>;
 
