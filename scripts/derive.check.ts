@@ -7,6 +7,7 @@ import {
   distanceFromCenterKm,
   buildBuzzNormalizer,
   percentileRank,
+  hoursFrom,
 } from "./derive";
 
 // slugify: stable, url-safe, suffixed with a placeId tail
@@ -47,5 +48,28 @@ assert.deepEqual(cuisinesFromTypes(["steak_house", "restaurant"], "Gibsons"), ["
 assert.deepEqual(cuisinesFromTypes(["greek_restaurant"], "Athena"), ["Mediterranean"]);
 assert.deepEqual(cuisinesFromTypes(["restaurant"], "Kung Fu Tea"), ["Cafe"]);
 assert.deepEqual(cuisinesFromTypes(["restaurant"], "Sweet Mandy B's Bakery"), ["Dessert"]);
+
+// hoursFrom: maps Google periods + offset; missing -> undefined
+assert.equal(hoursFrom({ id: "x", utcOffsetMinutes: -300 }), undefined); // no periods
+assert.equal(hoursFrom({ id: "x", regularOpeningHours: { periods: [] }, utcOffsetMinutes: -300 }), undefined);
+assert.equal(hoursFrom({ id: "x", regularOpeningHours: { periods: [{ open: { day: 1, hour: 11, minute: 0 } }] } }), undefined); // no offset
+const h = hoursFrom({
+  id: "x",
+  regularOpeningHours: {
+    periods: [{ open: { day: 1, hour: 11, minute: 0 }, close: { day: 1, hour: 21, minute: 30 } }],
+    weekdayDescriptions: ["Monday: 11:00 AM – 9:30 PM"],
+  },
+  utcOffsetMinutes: -300,
+});
+assert.deepEqual(h!.periods[0], { openDay: 1, openMin: 660, closeDay: 1, closeMin: 1290 });
+assert.equal(h!.utcOffsetMinutes, -300);
+assert.deepEqual(h!.weekdayText, ["Monday: 11:00 AM – 9:30 PM"]);
+// 24/7: a period with no close maps to open == close (full week downstream)
+const allDay = hoursFrom({
+  id: "x",
+  regularOpeningHours: { periods: [{ open: { day: 0, hour: 0, minute: 0 } }] },
+  utcOffsetMinutes: 0,
+});
+assert.deepEqual(allDay!.periods[0], { openDay: 0, openMin: 0, closeDay: 0, closeMin: 0 });
 
 console.log("derive.check ok");
