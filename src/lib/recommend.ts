@@ -7,6 +7,7 @@ import {
   TasteProfile,
 } from "./types";
 import { haversineKm } from "./geo";
+import { isOpenNow } from "./hours";
 import { NEIGHBORHOODS, neighborhoodCentroid } from "./neighborhoods";
 
 /**
@@ -30,6 +31,11 @@ export interface SignalState {
   // nudge — but still never empty the pool, so a thin area falls back to the
   // closest nearby spots rather than nothing.
   neighborhoodStrict?: boolean;
+  // Concierge-only "open now" steer. When `openNow` is set, the scorer boosts
+  // open spots and demotes closed ones, judged against `nowMs` (the client's
+  // clock). Inert on the client: `core` records carry no `hours`.
+  openNow?: boolean;
+  nowMs?: number;
 }
 
 const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
@@ -190,6 +196,19 @@ export function scoreRestaurant(
     }
   }
 
+  // 9c. Open-now steer (concierge-only). Strong but never a hard filter:
+  // boost open, demote closed, leave unknown untouched (no penalty for missing
+  // hours data — honest). Closed isn't removed; the pool never empties.
+  if (state.openNow && state.nowMs != null) {
+    const open = isOpenNow(r.hours, state.nowMs);
+    if (open === "open") {
+      score += 30;
+      reasons.push({ label: "Open now", weight: 30 });
+    } else if (open === "closed") {
+      score -= 40;
+    }
+  }
+
   // 10. Novelty / already-seen damping
   if (state.seen?.includes(r.id)) score -= 12;
 
@@ -221,6 +240,7 @@ export function parseQuery(q: string): Partial<TasteProfile> & {
   keywords: string[];
   neighborhood?: string;
   nearMe?: boolean;
+  openNow?: boolean;
 } {
   const text = q.toLowerCase();
   const keywords = text.split(/[^a-z]+/).filter(Boolean);
@@ -228,6 +248,7 @@ export function parseQuery(q: string): Partial<TasteProfile> & {
     keywords: string[];
     neighborhood?: string;
     nearMe?: boolean;
+    openNow?: boolean;
   } = { keywords };
 
   // "near me" / "around here" intent — pure detection only. The caller resolves
@@ -239,6 +260,12 @@ export function parseQuery(q: string): Partial<TasteProfile> & {
     )
   ) {
     profile.nearMe = true;
+  }
+
+  // "open now" / "what's open" — temporal intent tied to the current moment.
+  // Pure detection; the caller supplies `nowMs` (client clock) to the scorer.
+  if (/\bopen\s+(now|right\s+now)\b|\bwhat(?:'|’)?s\s+open\b|\bstill\s+open\b/.test(text)) {
+    profile.openNow = true;
   }
 
   // Neighborhood mention — match against the real neighborhoods in the data.
@@ -350,6 +377,9 @@ export function mergeCravings(
     // client only resolves geolocation for the latest turn), so it's
     // last-wins, not accumulated — a later non-spatial turn clears it.
     merged.nearMe = p.nearMe;
+    // Open-now is a fresh temporal intent on the current turn (last-wins, like
+    // nearMe — a later non-temporal turn clears it).
+    merged.openNow = p.openNow;
   }
   if (vibes.size) merged.vibes = Array.from(vibes) as any;
   return merged;
