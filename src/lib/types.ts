@@ -76,6 +76,20 @@ export interface Reel {
   dish?: string;
 }
 
+/**
+ * Normalized opening hours derived at ingest from Google `regularOpeningHours`.
+ * `openMin`/`closeMin` are minutes-from-midnight in the venue's LOCAL time.
+ * Day numbering matches Google periods: 0 = Sunday … 6 = Saturday. Overnight
+ * periods have `closeDay`/`closeMin` that wrap past the open instant (handled in
+ * `isOpenNow`). A 24/7 venue is a single period with open == close (full week).
+ * Detail-only / server-`full`: stripped from the client `core` dataset.
+ */
+export interface OpeningHours {
+  periods: { openDay: number; openMin: number; closeDay: number; closeMin: number }[];
+  weekdayText: string[]; // Google `weekdayDescriptions`, Monday-first, for display
+  utcOffsetMinutes: number; // the venue's own UTC offset
+}
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -109,6 +123,12 @@ export interface Restaurant {
    * display-facing, so it stays in the client `core` dataset (unlike insiderTip/blurb).
    */
   topDishes?: TopDish[];
+  /**
+   * Opening hours (Google). Optional — absent until a keyed re-ingest populates
+   * it. Server-`full` only (stripped from `core`), so client `core` records
+   * never carry it; `isOpenNow` returns "unknown" when absent.
+   */
+  hours?: OpeningHours;
   /**
    * Editorial "about" copy. Detail-only — stripped from the client `core`
    * dataset and served per-record from the server (see `data.server.ts`), so
