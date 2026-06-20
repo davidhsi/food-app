@@ -6,6 +6,28 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-19 — Concierge reply formatting (scannable list)
+
+A readability pass on the concierge chat replies: instead of a wall of prose, each
+recommended spot (or dish, in a "what to order" reply) now sits on its **own line**,
+led by its name in **bold**, with a blank line between picks and any heads-up on a
+final line. Easier to skim; voice and the keyless/Claude parity are unchanged.
+
+- **Bubble renders light formatting.** `assistant/page.tsx` gained a tiny `FormattedReply`
+  (with `renderBold`) — not a Markdown library, just `**name**` → `<strong>` (semibold,
+  ink) plus newline → line break and blank-line → paragraph. Plain one-line replies (small
+  talk, errors) render exactly as before.
+- **`sanitizeReplyText` now preserves newlines.** It previously collapsed any 2+ whitespace
+  (newlines included) to a single space, which would flatten the list. It now normalizes
+  only *horizontal* whitespace, trims spaces around line breaks, and caps blank-line runs —
+  em-dash→comma, en-dash, and space-before-punctuation tidies are unchanged.
+- **Generators emit the structure.** `composeLocalReply` (keyless concierge) bolds the spot
+  name and drops the "more below" cue to its own line; `orderGuideToReply` became a bold
+  dish-per-line list under a short opener (each pick now shows its own "why", where before
+  the extras were just named). The `askClaude` system prompt asks for the same scannable,
+  bold, one-spot-per-line shape (still STRICT JSON, no machine tells, no em dashes; the
+  reply string may now carry newlines + bold).
+
 ## 2026-06-19 — Concierge conversation memory
 
 The `/assistant` concierge now carries conversation context, so refinements *compose*

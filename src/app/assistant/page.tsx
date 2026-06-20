@@ -18,6 +18,41 @@ const SUGGESTIONS = [
   "What should I order at …?",
 ];
 
+// Bold the **name** segments of a single line. Restaurant/dish names never
+// contain "*", so a simple split is enough — this is not a general Markdown
+// parser, just the two things our replies use (bold + line breaks).
+function renderBold(line: string) {
+  return line.split(/(\*\*[^*]+\*\*)/g).map((seg, i) =>
+    seg.startsWith("**") && seg.endsWith("**") ? (
+      <strong key={i} className="font-semibold text-ink">
+        {seg.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{seg}</span>
+    ),
+  );
+}
+
+// Render an assistant reply as the scannable list it's written as: blank lines
+// become paragraphs, single newlines become line breaks, and **name** is bolded.
+// Plain one-line replies (small talk, errors) render unchanged.
+function FormattedReply({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\n{2,}/).map((block, bi) => (
+        <p key={bi} className={bi > 0 ? "mt-2" : undefined}>
+          {block.split("\n").map((line, li) => (
+            <span key={li}>
+              {li > 0 && <br />}
+              {renderBold(line)}
+            </span>
+          ))}
+        </p>
+      ))}
+    </>
+  );
+}
+
 export default function AssistantPage() {
   const profile = useStore((s) => s.profile);
   // Conversation lives in the store so it survives navigating into a restaurant
@@ -164,7 +199,7 @@ export default function AssistantPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="max-w-[88%] rounded-2xl rounded-bl-md bg-paper-raised px-4 py-2.5 text-sm text-ink ring-1 ring-line">
-                    {m.text}
+                    <FormattedReply text={m.text} />
                   </div>
                   {m.restaurantIds && m.restaurantIds.length > 0 && (
                     <div className="space-y-2">

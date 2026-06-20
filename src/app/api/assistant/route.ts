@@ -290,17 +290,17 @@ function composeLocalReply(
   const lead = gem
     ? seededPick(
         [
-          `off-the-radar pick: ${r.name}${where}`,
-          `a quieter one: ${r.name}${where}`,
-          `${r.name}${where} is the under-the-radar call`,
+          `off-the-radar pick: **${r.name}**${where}`,
+          `a quieter one: **${r.name}**${where}`,
+          `**${r.name}**${where} is the under-the-radar call`,
         ],
         r.id,
       )
     : seededPick(
         [
-          `I'd point you to ${r.name}${where}`,
-          `${r.name}${where} is where I'd start`,
-          `try ${r.name}${where}`,
+          `I'd point you to **${r.name}**${where}`,
+          `**${r.name}**${where} is where I'd start`,
+          `try **${r.name}**${where}`,
         ],
         r.id,
       );
@@ -314,11 +314,13 @@ function composeLocalReply(
         )
       : "";
   const tip = gem && r.insiderTip ? ` ${r.insiderTip}` : "";
+  // Closer goes on its own line so the lead reads as a clean, scannable opener
+  // with the spot's name bolded, and the "more below" cue doesn't crowd it.
   const closer = seededPick(
-    [" A few more below.", " A handful of others below, too.", " More below if this isn't it."],
+    ["A few more below.", "A handful of others below, too.", "More below if this isn't it."],
     r.id,
   );
-  return `For "${query}", ${lead}${fit}.${tip}${closer}`;
+  return `For "${query}", ${lead}${fit}.${tip}\n\n${closer}`;
 }
 
 async function askClaude(
@@ -359,10 +361,11 @@ async function askClaude(
       ? `The user specifically asked for ${neighborhood}. Strongly prefer candidates whose neighborhood is "${neighborhood}". If few or none match, do NOT substitute another area silently — say plainly that ${neighborhood} is thin on this and offer the closest nearby spots from the candidates instead. `
       : "") +
     'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
-    "VOICE: write the reply like a friend who knows the city — warm, specific, calm. One or two sentences; vary how you open so replies don't all start the same way. Name a dish or work in the insider tip so it reads lived-in. " +
+    "VOICE: write like a friend who knows the city, warm, specific, calm. " +
+    "FORMAT the recommendation as a short, scannable list so it's easy to skim: put EACH spot on its OWN line, leading with the restaurant name in **bold** (Markdown double asterisks), then ONE short specific sentence about it (name a dish or work in the insider tip so it reads lived-in). Separate the spots with a blank line. Vary how each line opens so they don't all read the same. Put any caveat (e.g. the area is thin) on its own final line. The reply string may contain newlines and the bold markers. " +
     'NEVER sound like a machine: no percentages or match scores, no "X% match" or "match for your taste", no formulaic openers like "I\'d start with" or "Here are". ' +
-    "Plain text only: no emoji, and no em dashes (use commas or periods instead). " +
-    'Example of the voice: "Tucked off Cermak, Mai\'s does a duck larb worth the detour. Go early on weekends before the line." ' +
+    "Plain text apart from the **bold** names: no emoji, and no em dashes (use commas or periods instead). " +
+    'Example: "**Mai\'s** off Cermak does a duck larb worth the detour, go early on weekends before the line.\n\n**Sun Wah** up in Uptown for the BBQ duck when you\'re feeding a group." ' +
     (history.length
       ? "This is a continuing conversation. Honor what the user already told you and treat the latest message as a refinement of it, not a fresh start. "
       : "") +

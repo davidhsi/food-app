@@ -57,16 +57,22 @@ export function seededPick<T>(pool: T[], seed: string): T {
  * spaced, so numeric ranges like "2–3" survive. Spares the allowed text accents
  * (★ ◆ ◷ ·). Pure, so both chat routes share it.
  */
+// Newlines are meaningful — replies are formatted as a scannable list (one spot
+// or dish per line) — so this normalizes horizontal whitespace but PRESERVES
+// line breaks (capping runs of blank lines), rather than flattening everything
+// to a single line.
 export function sanitizeReplyText(s: string): string {
   return s
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "") // astral emoji (surrogate pairs)
     .replace(/[✨❤⭐️]/g, "") // a few BMP emoji
-    .replace(/\s*—\s*/g, ", ") // em dash → comma
-    .replace(/\s+–\s+/g, ", ") // spaced en dash → comma (keep "2–3")
-    .replace(/,\s*,/g, ",") // tidy doubled commas
-    .replace(/\s+([.,;:!?])/g, "$1") // tidy space-before-punctuation
-    .replace(/\s{2,}/g, " ")
-    .replace(/^[,\s]+/, "")
+    .replace(/[^\S\n]*—[^\S\n]*/g, ", ") // em dash → comma (don't span line breaks)
+    .replace(/[^\S\n]+–[^\S\n]+/g, ", ") // spaced en dash → comma (keep "2–3")
+    .replace(/,[^\S\n]*,/g, ",") // tidy doubled commas
+    .replace(/[^\S\n]+([.,;:!?])/g, "$1") // tidy space-before-punctuation
+    .replace(/[^\S\n]{2,}/g, " ") // collapse runs of spaces/tabs (keep newlines)
+    .replace(/[^\S\n]*\n[^\S\n]*/g, "\n") // trim spaces around line breaks
+    .replace(/\n{3,}/g, "\n\n") // cap blank lines
+    .replace(/^[\s,]+/, "") // drop leading whitespace/commas
     .trim();
 }
 
@@ -269,31 +275,21 @@ export function orderGuideToReply(name: string, guide: OrderGuide): string {
   if (!guide.picks.length) {
     return `At ${name}, ${guide.intro.charAt(0).toLowerCase()}${guide.intro.slice(1)}`;
   }
-  const [first, ...rest] = guide.picks;
-  // Vary the opener so a page of "what to order" replies doesn't all start the
-  // same way; seeded on the name, so a given spot always reads the same.
-  const lead = seededPick(
+  // Scannable list: a short opener, then each dish on its own line with the dish
+  // name in **bold** and a brief why, so it's easy to skim. Seeded on the name so
+  // a given spot always reads the same (no slot-machine).
+  const opener = seededPick(
     [
-      `At ${name}, start with the ${first.dish}, ${first.why}.`,
-      `At ${name}, the ${first.dish} is where I'd begin, ${first.why}.`,
-      `Get the ${first.dish} at ${name}, ${first.why}.`,
+      `At **${name}**, here's what I'd get:`,
+      `At **${name}**, this is the order:`,
+      `Here's how I'd order at **${name}**:`,
     ],
     name,
   );
-  const restDishes = joinAnd(rest.map((p) => p.dish));
-  const more = rest.length
-    ? seededPick(
-        [
-          ` Also great: ${restDishes}.`,
-          ` Add the ${restDishes} if you're sharing.`,
-          ` The ${restDishes} are worth a look too.`,
-        ],
-        name,
-      )
-    : "";
+  const lines = guide.picks.map((p) => `**${p.dish}**, ${p.why}.`).join("\n");
   // Surface allergen cautions across the picks — grouped by allergen so we don't
-  // repeat "may contain" per dish — staying honest about safety without ever
-  // implying a dish is allergen-free.
+  // repeat "may contain" per dish — on their own final line, staying honest about
+  // safety without ever implying a dish is allergen-free.
   const byAllergen = new Map<Allergen, string[]>();
   for (const p of guide.picks)
     for (const c of p.cautions ?? [])
@@ -302,7 +298,7 @@ export function orderGuideToReply(name: string, guide: OrderGuide): string {
     `the ${joinAnd(dishes)} might contain ${allergen}`,
   );
   const caution = clauses.length
-    ? ` Heads up: ${joinAnd(clauses)}. Confirm with the kitchen.`
+    ? `\n\nHeads up: ${joinAnd(clauses)}. Confirm with the kitchen.`
     : "";
-  return lead + more + caution;
+  return `${opener}\n\n${lines}${caution}`;
 }
