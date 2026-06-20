@@ -8,6 +8,7 @@ import {
   buildBuzzNormalizer,
   cuisinesFromTypes,
   distanceFromCenterKm,
+  hoursFrom,
   percentileRank,
   priceFrom,
   ratingFrom,
@@ -135,6 +136,7 @@ async function main() {
       tags: editorial.tags,
       signatureDishes: editorial.signatureDishes,
       topDishes: editorial.topDishes,
+      hours: hoursFrom(place),
       blurb: editorial.blurb,
       reels: [{ poster }],
     });
