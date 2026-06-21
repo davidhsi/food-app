@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { gemScore, Restaurant } from "@/lib/types";
+import { gemScore, OpeningHours, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { scoreRestaurant } from "@/lib/recommend";
+import { isOpenNow, todayHoursText } from "@/lib/hours";
 import { track } from "@/lib/analytics";
 import RankModal from "@/components/RankModal";
 import ShareSpot from "@/components/ShareSpot";
@@ -109,6 +110,8 @@ export default function RestaurantDetail({
           </div>
         </div>
       </div>
+
+      <OpenNowLine hours={r.hours} />
 
       {/* Earliness cue (derived from buzz; not a live count) */}
       {isGem && (
@@ -219,6 +222,29 @@ export default function RestaurantDetail({
       </div>
 
       {ranking && <RankModal restaurant={r} onClose={() => setRanking(false)} />}
+    </div>
+  );
+}
+
+/** Honest open/closed line. Renders nothing without hours (like UserDistance);
+ * reads `Date.now()` in an effect to avoid an SSR/hydration mismatch. */
+function OpenNowLine({ hours }: { hours?: OpeningHours }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
+  if (!hours || now === null) return null;
+  const state = isOpenNow(hours, now);
+  if (state === "unknown") return null;
+  const open = state === "open";
+  const today = todayHoursText(hours, now)?.replace(/^[A-Za-z]+:\s*/, "");
+  // Don't echo "Closed" twice when the venue is closed all day.
+  const showToday = today && today.toLowerCase() !== "closed";
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-5 pt-4 text-sm">
+      <span className={open ? "font-semibold text-olive-deep" : "font-semibold text-ink-faint"}>
+        {open ? "● Open now" : "○ Closed"}
+      </span>
+      {showToday && <span className="text-ink-soft">{today}</span>}
+      <span className="text-xs text-ink-faint">Hours via Google</span>
     </div>
   );
 }

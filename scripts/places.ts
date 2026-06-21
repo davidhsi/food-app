@@ -18,6 +18,14 @@ export interface RawPlace {
   reviews?: PlaceReview[];
   editorialSummary?: { text: string };
   websiteUri?: string;
+  regularOpeningHours?: {
+    periods?: {
+      open: { day: number; hour: number; minute: number };
+      close?: { day: number; hour: number; minute: number };
+    }[];
+    weekdayDescriptions?: string[];
+  };
+  utcOffsetMinutes?: number;
 }
 
 const FIELD_MASK = [
@@ -34,6 +42,8 @@ const FIELD_MASK = [
   "places.reviews",
   "places.editorialSummary",
   "places.websiteUri",
+  "places.regularOpeningHours",
+  "places.utcOffsetMinutes",
   "nextPageToken",
 ].join(",");
 

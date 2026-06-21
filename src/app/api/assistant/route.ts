@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { RESTAURANTS_FULL } from "@/lib/data.server";
 import { NEIGHBORHOODS } from "@/lib/neighborhoods";
 import { mergeCravings, recommend } from "@/lib/recommend";
+import { isOpenNow, todayHoursText } from "@/lib/hours";
 import { gemScore, Restaurant, TasteProfile } from "@/lib/types";
 import {
   buildLocalOrderGuide,
@@ -28,6 +29,9 @@ interface Body {
   // planning/2026-06-17-data-storage-db-assessment.md. Re-trimmed/clamped
   // server-side below since it's client-supplied.
   history?: Turn[];
+  // Client wall-clock (epoch ms), used to judge "open now" against each venue's
+  // own UTC offset. Optional; defaults to server time.
+  userTime?: number;
 }
 
 // History caps. Keep the last few turns (~3 exchanges) for both the merged
@@ -178,6 +182,8 @@ export async function POST(req: NextRequest) {
       ? body.nearNeighborhood
       : null;
   const neighborhood = parsed.neighborhood ?? near;
+  const nowMs = typeof body.userTime === "number" ? body.userTime : Date.now();
+  const wantsOpen = !!parsed.openNow;
   // Score against the FULL dataset so candidates carry the detail-only editorial
   // (insiderTip/blurb) the reply and Claude prompt use — these aren't in `core`.
   const localScored = recommend(
@@ -188,6 +194,8 @@ export async function POST(req: NextRequest) {
       ranked: [],
       neighborhood,
       neighborhoodStrict: !!neighborhood,
+      openNow: wantsOpen,
+      nowMs,
     },
     RESTAURANTS_FULL,
   ).slice(0, 8);
@@ -203,6 +211,7 @@ export async function POST(req: NextRequest) {
         localScored,
         neighborhood,
         history,
+        wantsOpen ? nowMs : null,
       );
       if (result) return NextResponse.json({ ...result, engine: "claude" });
     } catch (e) {
@@ -213,7 +222,7 @@ export async function POST(req: NextRequest) {
 
   // Local fallback
   const top = localScored.slice(0, 4);
-  const reply = composeLocalReply(query, top, neighborhood);
+  const reply = composeLocalReply(query, top, neighborhood, wantsOpen);
   return NextResponse.json({
     reply,
     restaurantIds: top.map((s) => s.restaurant.id),
@@ -273,6 +282,7 @@ function composeLocalReply(
   query: string,
   top: ReturnType<typeof recommend>,
   neighborhood: string | null = null,
+  openNow = false,
 ): string {
   if (top.length === 0)
     return "I couldn't find a great match for that. Try a different craving or cuisine.";
@@ -320,7 +330,12 @@ function composeLocalReply(
     ["A few more below.", "A handful of others below, too.", "More below if this isn't it."],
     r.id,
   );
-  return `For "${query}", ${lead}${fit}.${tip}\n\n${closer}`;
+  // When the user asked for somewhere open right now, the picks already prefer
+  // open spots (the scorer steer); add the honest Google-hours caveat.
+  const hoursCaveat = openNow
+    ? "\n\nI'm going by Google's listed hours, so confirm with the spot before you head out."
+    : "";
+  return `For "${query}", ${lead}${fit}.${tip}\n\n${closer}${hoursCaveat}`;
 }
 
 async function askClaude(
@@ -330,6 +345,7 @@ async function askClaude(
   candidates: ReturnType<typeof recommend>,
   neighborhood: string | null = null,
   history: Turn[] = [],
+  openNowAt: number | null = null,
 ) {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
   const compact = candidates.map((s) => ({
@@ -347,6 +363,9 @@ async function askClaude(
     signatureDishes: s.restaurant.signatureDishes,
     insiderTip: s.restaurant.insiderTip,
     blurb: s.restaurant.blurb,
+    // Only computed for "open now" queries (else undefined, dropped from JSON).
+    openNow: openNowAt != null ? isOpenNow(s.restaurant.hours, openNowAt) : undefined,
+    todayHours: openNowAt != null ? todayHoursText(s.restaurant.hours, openNowAt) : undefined,
   }));
 
   const leanUnderground = (profile.undergroundBias ?? 0.7) >= 0.5;
@@ -359,6 +378,9 @@ async function askClaude(
       : "") +
     (neighborhood
       ? `The user specifically asked for ${neighborhood}. Strongly prefer candidates whose neighborhood is "${neighborhood}". If few or none match, do NOT substitute another area silently — say plainly that ${neighborhood} is thin on this and offer the closest nearby spots from the candidates instead. `
+      : "") +
+    (openNowAt != null
+      ? 'The user wants somewhere OPEN RIGHT NOW. Each candidate has an `openNow` field ("open" | "closed" | "unknown"). Strongly prefer "open" candidates; mention a "closed" one only if nothing is open, and say so plainly. Treat "unknown" as uncertain, do not claim it is open. ALWAYS end your reply with one short caveat line that you are going by Google\'s listed hours and they should confirm with the spot before heading out. '
       : "") +
     'Respond with STRICT JSON: {"reply": string, "restaurantIds": string[]}. ' +
     "VOICE: write like a friend who knows the city, warm, specific, calm. " +

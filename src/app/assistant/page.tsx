@@ -86,7 +86,7 @@ export default function AssistantPage() {
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query, profile, nearNeighborhood, history }),
+        body: JSON.stringify({ query, profile, nearNeighborhood, history, userTime: Date.now() }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data) {

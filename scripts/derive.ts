@@ -1,6 +1,32 @@
-import { Cuisine, Price } from "../src/lib/types";
+import { Cuisine, OpeningHours, Price } from "../src/lib/types";
 import { haversineKm } from "../src/lib/geo";
+import type { RawPlace } from "./places";
 import { CHICAGO_CENTER } from "./neighborhoods";
+
+/**
+ * Map Google `regularOpeningHours` + `utcOffsetMinutes` into the normalized
+ * `OpeningHours` shape. Returns undefined when periods or the offset are absent.
+ * A period with no `close` (Google's 24/7 encoding) becomes open == close, which
+ * `isOpenNow` treats as the full week.
+ */
+export function hoursFrom(raw: RawPlace): OpeningHours | undefined {
+  const roh = raw.regularOpeningHours;
+  if (!roh?.periods?.length || typeof raw.utcOffsetMinutes !== "number") return undefined;
+  const periods = roh.periods.map((p) => {
+    const openMin = p.open.hour * 60 + p.open.minute;
+    return {
+      openDay: p.open.day,
+      openMin,
+      closeDay: p.close ? p.close.day : p.open.day,
+      closeMin: p.close ? p.close.hour * 60 + p.close.minute : openMin,
+    };
+  });
+  return {
+    periods,
+    weekdayText: roh.weekdayDescriptions ?? [],
+    utcOffsetMinutes: raw.utcOffsetMinutes,
+  };
+}
 
 export function slugify(name: string, placeId: string): string {
   const base = name

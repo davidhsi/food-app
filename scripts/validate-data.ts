@@ -30,6 +30,11 @@ for (const r of data) {
       assert.ok(dishes.has(t.dish), `topDish "${t.dish}" in signatureDishes on ${r.id}`);
     }
   }
+  if (r.hours) {
+    assert.ok(Array.isArray(r.hours.periods), `hours.periods array on ${r.id}`);
+    assert.ok(typeof r.hours.utcOffsetMinutes === "number", `hours.utcOffsetMinutes on ${r.id}`);
+    assert.ok(Array.isArray(r.hours.weekdayText), `hours.weekdayText on ${r.id}`);
+  }
 }
 
 const neighborhoods = new Set(data.map((r) => r.neighborhood));
