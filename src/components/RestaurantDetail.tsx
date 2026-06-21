@@ -236,12 +236,14 @@ function OpenNowLine({ hours }: { hours?: OpeningHours }) {
   if (state === "unknown") return null;
   const open = state === "open";
   const today = todayHoursText(hours, now)?.replace(/^[A-Za-z]+:\s*/, "");
+  // Don't echo "Closed" twice when the venue is closed all day.
+  const showToday = today && today.toLowerCase() !== "closed";
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-5 pt-4 text-sm">
       <span className={open ? "font-semibold text-olive-deep" : "font-semibold text-ink-faint"}>
         {open ? "● Open now" : "○ Closed"}
       </span>
-      {today && <span className="text-ink-soft">{today}</span>}
+      {showToday && <span className="text-ink-soft">{today}</span>}
       <span className="text-xs text-ink-faint">Hours via Google</span>
     </div>
   );
