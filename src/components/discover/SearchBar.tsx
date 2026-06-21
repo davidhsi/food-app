@@ -24,7 +24,11 @@ export default function SearchBar() {
   const searchActive = submitted.trim() !== "" || cuisine !== null;
 
   return (
-    <div className="sticky top-0 z-30 bg-paper/95 px-4 pb-2 pt-4 backdrop-blur-md">
+    <div
+      className={`sticky top-0 z-30 bg-paper/95 px-4 pb-2 backdrop-blur-md ${
+        searchActive ? "pt-4" : "pt-2"
+      }`}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();

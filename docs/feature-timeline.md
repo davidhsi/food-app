@@ -22,6 +22,10 @@ A presentation-only polish over the 2026-06-19 Discover home (the brain is untou
   for first-visit users with location granted (header reads "Gems near you"). Degrades
   honestly — Locating… / Location off, never a faked fix — via a new `neighborhoodNearMe`
   store flag that decouples the label from the steer.
+- **Top-fold spacing** — tightened the gap between the tagline and the search bar
+  (28px → 16px): header `pb-3`→`pb-2`, and the search bar uses `pt-2` in browse mode
+  (the header already supplies the top breathing room), keeping `pt-4` in search mode
+  and when it pins on scroll.
 
 Decision: [`decisions/2026-06-21-discover-home-polish.md`](decisions/2026-06-21-discover-home-polish.md).
 

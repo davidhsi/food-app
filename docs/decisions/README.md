@@ -28,7 +28,7 @@ Superseded by …).
 | 2026-06-19 | [Chatbot voice — naturalness across both engines (seeded variation, no machine tells)](./2026-06-19-chatbot-voice-naturalness.md) | Shipped |
 | 2026-06-19 | [Concierge conversation memory — stateless server, client-held history, merged intent](./2026-06-19-concierge-conversation-memory.md) | Shipped |
 | 2026-06-19 | [Personal Map view — phone-native map of your spots + nearby gems (Leaflet + CARTO)](./2026-06-19-personal-map.md) | Shipped |
-| 2026-06-21 | [Discover home polish — filter dropdowns, "Near me" default, wordmark-leads](./2026-06-21-discover-home-polish.md) | Implemented (pending merge) |
+| 2026-06-21 | [Discover home polish — filter dropdowns, "Near me" default, wordmark-leads](./2026-06-21-discover-home-polish.md) | Shipped |
 
 > The data-storage assessment lives under top-level `planning/` for historical
 > reasons; it's the same kind of record and is indexed here for discoverability.

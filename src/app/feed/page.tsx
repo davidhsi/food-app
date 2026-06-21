@@ -190,7 +190,7 @@ export default function DiscoverPage() {
     <AppShell>
       <div ref={scrollRef} className="h-full overflow-y-auto pb-24">
         {!searchActive && (
-          <header className="px-5 pb-3 pt-4">
+          <header className="px-5 pb-2 pt-4">
             <div className="font-display text-2xl font-semibold tracking-tight text-ink">
               Truffle<span className="text-olive">.</span>
             </div>

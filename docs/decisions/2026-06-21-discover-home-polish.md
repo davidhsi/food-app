@@ -1,7 +1,7 @@
 # Design decision: Discover home polish — filter dropdowns, "Near me" default, wordmark-leads
 
 **Date:** 2026-06-21
-**Status:** Implemented (branch `worktree-discover-polish`; pending merge)
+**Status:** Shipped
 **Author:** David Hsi (with Claude)
 **Related:** refines [`2026-06-19-discover-home-merge.md`](./2026-06-19-discover-home-merge.md); spec [`specs/2026-06-19-discover-home-design.md`](../superpowers/specs/2026-06-19-discover-home-design.md)
 
@@ -70,6 +70,5 @@ spot. Excluding the hero from the CTA's pool keeps both without the duplicate.
 
 ## Status
 
-Implemented on `worktree-discover-polish`. Verified by `npm run typecheck && npm run
-build` (clean) + a manual pass; pending merge to `main` (which auto-deploys to
-Production).
+Shipped. Verified by `npm run typecheck && npm run build` (clean) + a manual 375px pass;
+merged to `main` (which auto-deploys to Production).
