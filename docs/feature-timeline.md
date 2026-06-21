@@ -6,6 +6,25 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-06-21 — Discover home polish pass
+
+A presentation-only polish over the 2026-06-19 Discover home (the brain is untouched):
+- **Wordmark leads** — `Truffle.` + tagline render first; the search bar sticky-pins
+  below on scroll (was search-forward).
+- **Hero ↔ "Can't decide?" de-duped** — `HelpMeDecide` takes an `excludeId` so it never
+  offers the spot already featured in the hero directly above it.
+- **Two chip rows → one filter row of dropdown pills** — the 19-item cuisine strip and
+  the 9-item neighborhood strip collapse into two pill-dropdowns (new
+  `src/components/discover/FilterSelect.tsx` + `NeighborhoodFilter.tsx`, replacing
+  `NeighborhoodChips`); each pill shows the active choice with a distinct icon
+  (pin / utensils).
+- **"Near me" neighborhood option** — menu is `Anywhere · Near me · {areas}`; the default
+  for first-visit users with location granted (header reads "Gems near you"). Degrades
+  honestly — Locating… / Location off, never a faked fix — via a new `neighborhoodNearMe`
+  store flag that decouples the label from the steer.
+
+Decision: [`decisions/2026-06-21-discover-home-polish.md`](decisions/2026-06-21-discover-home-polish.md).
+
 ## 2026-06-20 — "Open now" concierge awareness
 
 The AI concierge and detail page now know whether a spot is open right now. A real

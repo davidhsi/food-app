@@ -7,7 +7,7 @@ import { recommend } from "@/lib/recommend";
 import { track } from "@/lib/analytics";
 import { SparkleIcon, ArrowRight } from "./icons";
 
-export default function HelpMeDecide() {
+export default function HelpMeDecide({ excludeId }: { excludeId?: string }) {
   const router = useRouter();
   const profile = useStore((s) => s.profile);
   const liked = useStore((s) => s.liked);
@@ -18,10 +18,15 @@ export default function HelpMeDecide() {
   const [askCount, setAskCount] = useState(0);
 
   // Score once per taste/state change. "Pick again" (askCount) only walks this
-  // cached top list — it must never re-score all ~1.6k restaurants.
+  // cached top list — it must never re-score all ~1.6k restaurants. `excludeId`
+  // drops the Discover hero so this CTA never offers the spot already featured
+  // directly above it.
   const top = useMemo(
-    () => recommend({ profile, liked, saved, ranked, seen }).slice(0, 5),
-    [profile, liked, saved, ranked, seen],
+    () =>
+      recommend({ profile, liked, saved, ranked, seen })
+        .filter((s) => s.restaurant.id !== excludeId)
+        .slice(0, 5),
+    [profile, liked, saved, ranked, seen, excludeId],
   );
   const pick = top.length ? top[askCount % top.length] : null;
 

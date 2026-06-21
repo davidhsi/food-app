@@ -33,6 +33,9 @@ interface AppState {
   seen: string[];
   neighborhood: string | null; // null = "Anywhere" (no steer)
   neighborhoodTouched: boolean; // true once the user has chosen, incl. "Anywhere"
+  // "Near me" mode: `neighborhood` still holds the resolved nearest area (so the
+  // steer is unchanged), but the UI labels it "Near me" instead of that area.
+  neighborhoodNearMe: boolean;
 
   // Ephemeral UI state kept in the store (not local component state) so it
   // survives navigating into a restaurant and back. Excluded from persistence
@@ -49,6 +52,8 @@ interface AppState {
   toggleSave: (id: string) => void;
   markSeen: (id: string) => void;
   setNeighborhood: (name: string | null) => void;
+  // Enter "Near me" mode with the geolocation-resolved nearest area.
+  setNearMe: (name: string) => void;
   setSearch: (
     patch: Partial<
       Pick<
@@ -76,6 +81,7 @@ export const useStore = create<AppState>()(
       seen: [],
       neighborhood: null,
       neighborhoodTouched: false,
+      neighborhoodNearMe: false,
       searchQuery: "",
       searchSubmitted: "",
       searchCuisine: null,
@@ -105,7 +111,18 @@ export const useStore = create<AppState>()(
         ),
 
       setNeighborhood: (name) =>
-        set({ neighborhood: name, neighborhoodTouched: true }),
+        set({
+          neighborhood: name,
+          neighborhoodTouched: true,
+          neighborhoodNearMe: false,
+        }),
+
+      setNearMe: (name) =>
+        set({
+          neighborhood: name,
+          neighborhoodTouched: true,
+          neighborhoodNearMe: true,
+        }),
 
       setSearch: (patch) => set(patch),
       setAssistantMessages: (m) =>
@@ -133,6 +150,7 @@ export const useStore = create<AppState>()(
           seen: [],
           neighborhood: null,
           neighborhoodTouched: false,
+          neighborhoodNearMe: false,
           searchQuery: "",
           searchSubmitted: "",
           searchCuisine: null,
@@ -153,6 +171,7 @@ export const useStore = create<AppState>()(
         seen: s.seen,
         neighborhood: s.neighborhood,
         neighborhoodTouched: s.neighborhoodTouched,
+        neighborhoodNearMe: s.neighborhoodNearMe,
       }),
     },
   ),

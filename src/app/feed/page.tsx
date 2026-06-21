@@ -5,7 +5,6 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import Feed from "@/components/Feed";
 import HelpMeDecide from "@/components/HelpMeDecide";
-import NeighborhoodChips from "@/components/NeighborhoodChips";
 import SpotCard from "@/components/SpotCard";
 import SearchBar from "@/components/discover/SearchBar";
 import Shelf from "@/components/discover/Shelf";
@@ -56,6 +55,7 @@ export default function DiscoverPage() {
   const ranked = store.ranked;
   const seen = store.seen;
   const neighborhood = store.neighborhood;
+  const nearMe = store.neighborhoodNearMe;
   const submitted = store.searchSubmitted;
   const cuisine = store.searchCuisine;
   const geoNbhd = store.searchGeoNbhd;
@@ -189,6 +189,20 @@ export default function DiscoverPage() {
   return (
     <AppShell>
       <div ref={scrollRef} className="h-full overflow-y-auto pb-24">
+        {!searchActive && (
+          <header className="px-5 pb-3 pt-4">
+            <div className="font-display text-2xl font-semibold tracking-tight text-ink">
+              Truffle<span className="text-olive">.</span>
+            </div>
+            <p className="mt-0.5 text-[13px] text-ink-soft">
+              {nearMe
+                ? "Gems near you"
+                : neighborhood
+                  ? `Gems in ${neighborhood}`
+                  : "Before everyone finds out"}
+            </p>
+          </header>
+        )}
         <SearchBar />
 
         {searchActive && results ? (
@@ -227,17 +241,8 @@ export default function DiscoverPage() {
         ) : (
           /* ---- Browse / editorial mode ---- */
           <>
-            <header className="px-5 pb-3 pt-4">
-              <div className="font-display text-2xl font-semibold tracking-tight text-ink">
-                Truffle<span className="text-olive">.</span>
-              </div>
-              <p className="mt-0.5 text-[13px] text-ink-soft">
-                {neighborhood ? `Gems in ${neighborhood}` : "Before everyone finds out"}
-              </p>
-            </header>
-            <NeighborhoodChips />
             {hero && <HeroSpot scored={hero} />}
-            <HelpMeDecide />
+            <HelpMeDecide excludeId={hero?.restaurant.id} />
             {shelves.map((s) => (
               <Shelf key={s.key} title={s.title} restaurants={s.restaurants} />
             ))}

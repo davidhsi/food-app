@@ -1,21 +1,27 @@
 "use client";
 
-import { SearchIcon, XIcon } from "@/components/icons";
+import { SearchIcon, XIcon, UtensilsIcon } from "@/components/icons";
 import { ALL_CUISINES } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
+import FilterSelect from "./FilterSelect";
+import NeighborhoodFilter from "./NeighborhoodFilter";
 
 /**
- * The Discover home's search affordance: a sticky text box plus the cuisine
- * filter row. Both write to the store's ephemeral search state (so they survive
- * navigating into a restaurant and back), and either one being active flips the
- * home from browse mode into search/results mode — the page reads the same store
- * fields to decide. Self-contained like NeighborhoodChips.
+ * The Discover home's sticky filter hub: a search box plus a single row of
+ * filter pills. The text box and the cuisine pill write to the store's
+ * ephemeral search state and flip the home into search/results mode when active;
+ * the neighborhood pill is a browse-only steer (it never enters search mode), so
+ * it's hidden once results are showing to avoid implying a filter that the
+ * results branch doesn't apply.
  */
 export default function SearchBar() {
   const q = useStore((s) => s.searchQuery);
   const cuisine = useStore((s) => s.searchCuisine);
+  const submitted = useStore((s) => s.searchSubmitted);
   const setSearch = useStore((s) => s.setSearch);
+
+  const searchActive = submitted.trim() !== "" || cuisine !== null;
 
   return (
     <div className="sticky top-0 z-30 bg-paper/95 px-4 pb-2 pt-4 backdrop-blur-md">
@@ -49,30 +55,16 @@ export default function SearchBar() {
         )}
       </form>
 
-      <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto [mask-image:linear-gradient(to_right,black_92%,transparent)]">
-        <button
-          onClick={() => setSearch({ searchCuisine: null })}
-          className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-            !cuisine
-              ? "bg-olive text-paper"
-              : "bg-paper-raised text-ink-soft ring-1 ring-line"
-          }`}
-        >
-          All
-        </button>
-        {ALL_CUISINES.map((c) => (
-          <button
-            key={c}
-            onClick={() => setSearch({ searchCuisine: cuisine === c ? null : c })}
-            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-              cuisine === c
-                ? "bg-olive text-paper"
-                : "bg-paper-raised text-ink-soft ring-1 ring-line"
-            }`}
-          >
-            {c}
-          </button>
-        ))}
+      <div className="mt-3 flex items-center gap-2">
+        {!searchActive && <NeighborhoodFilter />}
+        <FilterSelect
+          label="Cuisine"
+          value={cuisine}
+          options={ALL_CUISINES}
+          allLabel="Any cuisine"
+          icon={<UtensilsIcon width={13} height={13} />}
+          onChange={(c) => setSearch({ searchCuisine: c })}
+        />
       </div>
     </div>
   );

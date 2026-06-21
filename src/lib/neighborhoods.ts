@@ -53,7 +53,7 @@ export function nearestNeighborhood(lat: number, lng: number): string {
  * Resolve the user's current position to the nearest known neighborhood via the
  * browser. Client-only (touches `navigator` at call time); resolves null when
  * geolocation is unavailable, denied, or times out so callers fall back to no
- * location steer. Mirrors NeighborhoodChips' fail-silent read.
+ * location steer. Mirrors NeighborhoodFilter's fail-silent read.
  */
 export function resolveNearbyNeighborhood(): Promise<string | null> {
   return new Promise((resolve) => {

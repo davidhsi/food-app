@@ -100,6 +100,18 @@ export const XIcon = (p: P) => (
   </svg>
 );
 
+export const ChevronDownIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
+export const CheckIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m5 12 5 5L20 7" />
+  </svg>
+);
+
 export const UtensilsIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M5 3v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M7 11v10" />
