@@ -15,15 +15,25 @@ import { Restaurant } from "../src/lib/types";
  * Run standalone with `npm run split-data`; also invoked at the end of
  * `npm run ingest`. CommonJS, consistent with the rest of `scripts/`.
  */
-export const DETAIL_ONLY_FIELDS = ["insiderTip", "blurb", "hours"] as const;
+export const DETAIL_ONLY_FIELDS = [
+  "insiderTip",
+  "blurb",
+  "hours",
+  "dishDescriptions",
+] as const;
 
 const SRC = path.join(process.cwd(), "src", "lib", "restaurants.generated.json");
 const CORE_OUT = path.join(process.cwd(), "src", "lib", "restaurants.core.json");
 
-export function toCore(r: Restaurant): Omit<Restaurant, "insiderTip" | "blurb" | "hours"> {
+export function toCore(
+  r: Restaurant,
+): Omit<Restaurant, "insiderTip" | "blurb" | "hours" | "dishDescriptions"> {
   const core: Record<string, unknown> = { ...r };
   for (const f of DETAIL_ONLY_FIELDS) delete core[f];
-  return core as Omit<Restaurant, "insiderTip" | "blurb" | "hours">;
+  return core as Omit<
+    Restaurant,
+    "insiderTip" | "blurb" | "hours" | "dishDescriptions"
+  >;
 }
 
 export function writeCoreDataset(restaurants: Restaurant[]): void {

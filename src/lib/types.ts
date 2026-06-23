@@ -124,6 +124,16 @@ export interface Restaurant {
    */
   topDishes?: TopDish[];
   /**
+   * Pre-stored, dish-centric descriptions (the rich "what it is / why it's a
+   * standout" copy shown in the detail page's "What to order" guide), each `dish`
+   * ∈ `signatureDishes`. Generated at ingest (Claude) and populated by the
+   * `enrich-dishes` pass — see `docs/decisions/2026-06-21-prestored-dish-descriptions.md`.
+   * **Detail-only** — stripped from the client `core` dataset (it's the bulk of the
+   * payload and only the detail page uses it), so it's optional on client records.
+   * Dormant (absent) until the enrichment pass runs; the guide omits the line until then.
+   */
+  dishDescriptions?: { dish: string; desc: string }[];
+  /**
    * Opening hours (Google). Optional — absent until a keyed re-ingest populates
    * it. Server-`full` only (stripped from `core`), so client `core` records
    * never carry it; `isOpenNow` returns "unknown" when absent.
