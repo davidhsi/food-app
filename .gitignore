@@ -31,6 +31,9 @@ next-env.d.ts
 # Claude Code runtime locks
 .claude/scheduled_tasks.lock
 
+# Claude Code worktrees (nested git working copies — never commit these)
+.claude/worktrees/
+
 # Ingest pipeline cache (regenerated on demand)
 scripts/.ingest-cache/
 .vercel
