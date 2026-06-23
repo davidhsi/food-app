@@ -1,4 +1,5 @@
 import { Cuisine, Dietary, Price, TopDish, Vibe } from "../src/lib/types";
+import { sanitizeReplyText } from "../src/lib/order";
 
 export interface EditorialInput {
   name: string;
@@ -121,6 +122,105 @@ export function coerce(raw: any, input: EditorialInput): Editorial {
     spice,
     cuisines: cuisines.length ? cuisines : input.cuisines,
   };
+}
+
+export interface DishDescription {
+  dish: string;
+  desc: string;
+}
+
+export interface DishDescInput {
+  name: string;
+  cuisines: Cuisine[];
+  price: Price;
+  /** The dishes to describe — typically the guide's picks (topDishes / first 3). */
+  dishes: string[];
+  /** Editorial "about" copy, if we have it — grounds the descriptions. */
+  blurb?: string;
+  reviewSnippets?: string[];
+}
+
+/**
+ * Keep only descriptions whose dish is one we asked about, with house-style,
+ * non-empty copy. Mirrors `coerce`/`sanitizePicks`: the model can never describe
+ * a dish that isn't real (`dishes` ⊆ the restaurant's `signatureDishes`).
+ */
+export function coerceDishDescriptions(
+  raw: any,
+  dishes: string[],
+): DishDescription[] {
+  const list = Array.isArray(raw?.descriptions) ? raw.descriptions : [];
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const allowed = new Map(dishes.map((d) => [norm(d), d]));
+  const seen = new Set<string>();
+  const out: DishDescription[] = [];
+  for (const d of list) {
+    const canonical = typeof d?.dish === "string" ? allowed.get(norm(d.dish)) : undefined;
+    if (!canonical || seen.has(canonical)) continue;
+    const desc =
+      typeof d?.desc === "string" && d.desc.trim()
+        ? sanitizeReplyText(d.desc.trim())
+        : "";
+    if (!desc) continue;
+    seen.add(canonical);
+    out.push({ dish: canonical, desc }); // our spelling, not the model's
+  }
+  return out;
+}
+
+/**
+ * Pre-generate the rich, dish-centric "what it is / why it's a standout"
+ * descriptions stored in `Restaurant.dishDescriptions` and rendered instantly by
+ * the detail-page order guide (Ordering Phase 3; see the decision doc). Grounded
+ * only in the name/cuisine/blurb/reviews — never invents prices, awards, or
+ * ingredients — and limited to the dishes we pass in (⊆ signatureDishes).
+ * Returns [] without a key (the guide simply omits the description line).
+ */
+export async function generateDishDescriptions(
+  input: DishDescInput,
+  apiKey?: string,
+): Promise<DishDescription[]> {
+  const dishes = input.dishes.filter((d) => typeof d === "string" && d.trim()).slice(0, 3);
+  if (!apiKey || dishes.length === 0) return [];
+  const model = process.env.ANTHROPIC_INGEST_MODEL || "claude-haiku-4-5";
+  const system =
+    "You write Truffle's calm, in-the-know dish descriptions. For EACH dish provided, write 1-2 sentences on WHAT IT IS and why it's a standout at this spot, grounded ONLY in the supplied facts/cuisine/reviews. " +
+    "Describe the dish itself for any diner — do NOT address 'you' or assume the reader's taste. Never invent ingredients, prices, awards, or heat levels not implied by the facts. " +
+    "Sound like a friend who's eaten there, not a menu or a machine: no marketing fluff, no em dashes (use commas or periods), no emoji. " +
+    'Respond with STRICT JSON only: {"descriptions": [{"dish": string, "desc": string}]}. ' +
+    "Each `dish` MUST be copied verbatim from the provided dishes list. No prose outside JSON.";
+  const userMsg =
+    `Restaurant: ${input.name}\n` +
+    `Cuisines: ${input.cuisines.join(", ")}\n` +
+    `Price: ${priceStr(input.price)}\n` +
+    (input.blurb ? `About: ${input.blurb}\n` : "") +
+    `Dishes to describe: ${JSON.stringify(dishes)}\n` +
+    (input.reviewSnippets?.length
+      ? `Review snippets:\n- ${input.reviewSnippets.slice(0, 5).join("\n- ")}`
+      : "");
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 500,
+        system,
+        messages: [{ role: "user", content: userMsg }],
+      }),
+    });
+    if (!res.ok) throw new Error(`anthropic ${res.status}`);
+    const data = await res.json();
+    const text: string = data?.content?.map((b: any) => b.text).join("") ?? "";
+    return coerceDishDescriptions(extractJson(text), dishes);
+  } catch (e) {
+    console.error(`dish descriptions skipped for "${input.name}":`, (e as Error).message);
+    return [];
+  }
 }
 
 export async function generateEditorial(

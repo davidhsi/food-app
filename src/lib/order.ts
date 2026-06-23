@@ -20,6 +20,12 @@ export interface OrderPick {
   dish: string;
   /** A short, human reason this dish fits the user's taste. */
   why: string;
+  /**
+   * Pre-stored, dish-centric description (the rich "what it is / why it's a
+   * standout" copy) from `Restaurant.dishDescriptions`, if present. Detail-only,
+   * so it's populated on the full record the detail page holds, absent elsewhere.
+   */
+  desc?: string;
   /** Crowd-derived "what reviewers love it for" note (from `topDishes`), if any. */
   note?: string;
   /**
@@ -198,14 +204,22 @@ export function buildLocalOrderGuide(
   const source: { dish: string; note?: string }[] = r.topDishes?.length
     ? r.topDishes.slice(0, 3)
     : r.signatureDishes.slice(0, 3).map((dish) => ({ dish }));
+  // Pre-stored dish-centric descriptions, indexed by dish (whitespace/case-
+  // insensitive). Detail-only, so populated only on the full record.
+  const normDish = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const descByDish = new Map(
+    (r.dishDescriptions ?? []).map((d) => [normDish(d.dish), d.desc]),
+  );
   const picks: OrderPick[] = source.map(({ dish, note }) => {
     const cautions = cautionsFor(dish, allergies);
     // Seed per dish so the three picks for one spot don't all read identically.
     const seed = `${r.id}:${dish}`;
     const why = tasteWhy(r, profile, seed) ?? houseReason(seed);
+    const desc = descByDish.get(normDish(dish));
     return {
       dish,
       why,
+      ...(desc ? { desc } : {}),
       ...(note ? { note } : {}),
       ...(cautions.length ? { cautions } : {}),
     };

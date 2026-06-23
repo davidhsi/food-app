@@ -244,7 +244,12 @@ export default function DiscoverPage() {
             {hero && <HeroSpot scored={hero} />}
             <HelpMeDecide excludeId={hero?.restaurant.id} />
             {shelves.map((s) => (
-              <Shelf key={s.key} title={s.title} restaurants={s.restaurants} />
+              <Shelf
+                key={s.key}
+                scrollKey={s.key}
+                title={s.title}
+                restaurants={s.restaurants}
+              />
             ))}
             {tail.length > 0 && (
               <>

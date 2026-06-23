@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "ingest": "tsx scripts/ingest.ts",
     "split-data": "tsx scripts/split-data.ts",
+    "enrich-dishes": "tsx scripts/enrich-dish-descriptions.ts",
     "validate-data": "tsx scripts/validate-data.ts"
   },
   "dependencies": {

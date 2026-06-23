@@ -30,6 +30,19 @@ for (const r of data) {
       assert.ok(dishes.has(t.dish), `topDish "${t.dish}" in signatureDishes on ${r.id}`);
     }
   }
+  if (r.dishDescriptions) {
+    const dishes = new Set(r.signatureDishes);
+    for (const d of r.dishDescriptions) {
+      assert.ok(
+        dishes.has(d.dish),
+        `dishDescription "${d.dish}" in signatureDishes on ${r.id}`,
+      );
+      assert.ok(
+        typeof d.desc === "string" && d.desc.trim().length > 0,
+        `dishDescription desc non-empty on ${r.id}`,
+      );
+    }
+  }
   if (r.hours) {
     assert.ok(Array.isArray(r.hours.periods), `hours.periods array on ${r.id}`);
     assert.ok(typeof r.hours.utcOffsetMinutes === "number", `hours.utcOffsetMinutes on ${r.id}`);
