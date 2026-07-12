@@ -49,6 +49,29 @@ async function main() {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
+  // Carry forward `dishDescriptions` from the previous dataset — they're
+  // populated by the separate `npm run enrich-dishes` pass (real Anthropic
+  // spend), not by this script, so a re-ingest must not wipe them. Keyed by
+  // record id (stable while a place keeps its name); filtered against the
+  // record's current signatureDishes at push time so a dish that disappears
+  // from the editorial can't carry a stale description (validate-data asserts
+  // dishDescriptions ⊆ signatureDishes).
+  const prevDishDescriptions = new Map<
+    string,
+    NonNullable<Restaurant["dishDescriptions"]>
+  >();
+  if (fs.existsSync(OUT)) {
+    const prev = JSON.parse(fs.readFileSync(OUT, "utf8")) as Restaurant[];
+    for (const r of prev) {
+      if (r.dishDescriptions?.length) {
+        prevDishDescriptions.set(r.id, r.dishDescriptions);
+      }
+    }
+    console.log(
+      `Carrying forward dishDescriptions for ${prevDishDescriptions.size} records.`,
+    );
+  }
+
   // 1. Gather raw places (live, or from the fixture for --sample).
   const raw: { place: RawPlace; neighborhood: string }[] = [];
   if (sample) {
@@ -116,8 +139,14 @@ async function main() {
       ? `/api/photo?ref=${encodeURIComponent(photoName)}`
       : "/api/photo?ref=";
 
+    const id = slugify(name, place.id);
+    const signatureSet = new Set<string>(editorial.signatureDishes ?? []);
+    const carriedDescriptions = (prevDishDescriptions.get(id) ?? []).filter(
+      (d) => signatureSet.has(d.dish),
+    );
+
     restaurants.push({
-      id: slugify(name, place.id),
+      id,
       name,
       cuisines,
       price,
@@ -136,6 +165,9 @@ async function main() {
       tags: editorial.tags,
       signatureDishes: editorial.signatureDishes,
       topDishes: editorial.topDishes,
+      dishDescriptions: carriedDescriptions.length
+        ? carriedDescriptions
+        : undefined,
       hours: hoursFrom(place),
       blurb: editorial.blurb,
       reels: [{ poster }],
