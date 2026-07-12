@@ -1,4 +1,4 @@
-# Truffle — Feature Roadmap
+# Anaba — Feature Roadmap
 
 Living backlog of planned feature work. Each item graduates to its own
 `docs/superpowers/specs/` design + `docs/superpowers/plans/` plan when picked up.

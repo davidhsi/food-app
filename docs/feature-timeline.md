@@ -6,6 +6,18 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-07-11 — Custom domain: eatanaba.com
+
+Bought via Vercel (registrar + nameservers both Vercel — DNS/TLS fully managed).
+Apex + `www` attached to the project; `NEXT_PUBLIC_SITE_URL` rebaked so OG/share
+URLs use the domain. Also fixed the bare-domain experience for non-JS clients:
+`/` → `/feed` is now a config-level redirect in `next.config.mjs` (a real
+`Location` header at the edge) instead of only the app-router `redirect()`,
+which fires client-side — link unfurlers hitting a shared `eatanaba.com`
+previously saw an empty shell.
+
+---
+
 ## 2026-07-11 — Renamed: Truffle → Anaba
 
 Pre-GTM domain purchase surfaced a senior same-category incumbent ("Truffle:
@@ -13,6 +25,8 @@ Restaurant Tracker", App Store since 2021). Renamed to **Anaba** (穴場, Japane
 for "a great spot only locals know") after vetting ~20 candidates across App
 Store / web / domains. Full sweep of user-facing strings, PWA/manifest identity,
 OG images, prompts, and the localStorage key; historical docs keep "Truffle".
+The truffle-mushroom icon was replaced with an **"A." monogram** (Fraunces, ink
+on paper, olive full stop) across app icon, apple-icon, and all PWA icons.
 Decision (with the full shortlist + rejected alternatives):
 [`decisions/2026-07-11-rename-to-anaba.md`](decisions/2026-07-11-rename-to-anaba.md).
 

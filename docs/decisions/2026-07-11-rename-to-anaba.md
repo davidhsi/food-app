@@ -53,8 +53,10 @@ concierge + order-guide system prompts, `package.json`, profile monogram, and
 the localStorage key (`truffle-store` → `anaba-store`; pre-rename local state
 resets — acceptable at zero users). **Historical docs, specs, and decision
 records keep "Truffle"** — they are records, not surfaces. The truffle-mushroom
-app icon survives short-term (reads as "hidden thing sprouting"); a proper
-Anaba mark is a follow-up.
+app icon was replaced the same day with an **"A." monogram** (Fraunces
+semibold, ink on paper, olive full stop — the wordmark reduced to a mark),
+rendered via canvas at 512px and installed as app icon, apple-icon, and all
+PWA icons.
 
 ## Caveat
 
