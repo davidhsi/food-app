@@ -8,9 +8,11 @@ when the live state changes (new env var, custom domain, project move).
 - **Host:** Vercel project **`food-app`** (team `hsidavid02-4050`), connected to
   GitHub `davidhsi/food-app` via Vercel's **Git integration**. The local link
   lives in `.vercel/` (gitignored — not shared).
-- **Live (production) URL:** **https://food-app-ecru-ten.vercel.app** — the stable
+- **Live (production) URL:** **https://eatanaba.com** (custom domain, added 2026-07-11;
+  `www.` redirects to apex). **https://food-app-ecru-ten.vercel.app** remains the stable
   production alias. Also aliased as `food-app-git-main-…vercel.app`.
-- **Custom domain:** none yet. (To add one: see below.)
+- **Custom domain:** `eatanaba.com` — bought via Vercel (registrar + nameservers both
+  Vercel, so DNS/TLS are fully managed; renews Jul 2027).
 
 ## How it ships — auto-deploy is ON
 
@@ -37,7 +39,7 @@ Set in Vercel → Project → Settings → Environment Variables (not in git):
 | Var | Required | Purpose | Notes |
 |---|---|---|---|
 | `GOOGLE_PLACES_API_KEY` | yes | `/api/photo` proxy + OG-image photo fetch | without it, cards/hero/OG render image-less |
-| `NEXT_PUBLIC_SITE_URL` | yes (for correct share links) | canonical host for OG/metadata absolute URLs (`src/lib/site.ts`) | currently `https://food-app-ecru-ten.vercel.app`. **`NEXT_PUBLIC_*` is inlined at build time → you must redeploy after changing it**, not just save it. Falls back to per-deploy `VERCEL_URL` if unset (rotating URL — bad for shares). |
+| `NEXT_PUBLIC_SITE_URL` | yes (for correct share links) | canonical host for OG/metadata absolute URLs (`src/lib/site.ts`) | currently `https://eatanaba.com`. **`NEXT_PUBLIC_*` is inlined at build time → you must redeploy after changing it**, not just save it. Falls back to per-deploy `VERCEL_URL` if unset (rotating URL — bad for shares). |
 | `ANTHROPIC_API_KEY` | optional | Claude concierge + ordering upgrade | absent → deterministic local engine (feature still works) |
 
 `vercel env ls production` shows what's set (values encrypted).
@@ -47,7 +49,7 @@ Set in Vercel → Project → Settings → Environment Variables (not in git):
 Against the live URL (or a preview URL):
 
 ```bash
-BASE=https://food-app-ecru-ten.vercel.app
+BASE=https://eatanaba.com
 curl -s -o /dev/null -w "%{http_code}\n" "$BASE/feed"                       # 200
 ID=<a real restaurant id from restaurants.core.json>
 curl -s -o /dev/null -w "%{http_code} %{content_type}\n" \
