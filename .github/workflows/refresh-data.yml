@@ -1,0 +1,94 @@
+# Weekly restaurant-data refresh — keeps hours/closures/new-openings current
+# without a manual `npm run ingest` (see docs/deployment.md).
+#
+# The committed `scripts/.ingest-cache/` makes the ingest cache-hit on editorial
+# (no copy churn, no Anthropic spend for existing spots); only genuinely new
+# places generate fresh editorial + dish descriptions. The push auto-deploys via
+# the Vercel Git integration, same as any push to main.
+#
+# Secrets required (Settings → Secrets and variables → Actions):
+#   GOOGLE_PLACES_API_KEY  — required for a live refresh
+#   ANTHROPIC_API_KEY      — optional; new spots get editorial + dish
+#                            descriptions only when set
+#
+# Manual runs: Actions → "Refresh restaurant data" → Run workflow.
+#   mode=live    real Places refresh, commits the result (default)
+#   mode=sample  offline pipeline test from the 2-record fixture; never commits
+name: Refresh restaurant data
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC ≈ 3–4am Chicago
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "live = real refresh (commits); sample = offline test (no commit)"
+        type: choice
+        options: [live, sample]
+        default: live
+
+permissions:
+  contents: write
+
+concurrency: refresh-data
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      MODE: ${{ github.event_name == 'schedule' && 'live' || inputs.mode }}
+      GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Guard — live refresh needs the Places key
+        if: env.MODE == 'live'
+        run: |
+          if [ -z "$GOOGLE_PLACES_API_KEY" ]; then
+            echo "::error::GOOGLE_PLACES_API_KEY secret is not set — cannot run a live refresh."
+            exit 1
+          fi
+
+      - name: Ingest (live)
+        if: env.MODE == 'live'
+        run: npm run ingest
+
+      - name: Ingest (sample fixture)
+        if: env.MODE == 'sample'
+        run: npm run ingest -- --sample
+
+      - name: Enrich dish descriptions for new spots (live)
+        if: env.MODE == 'live'
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            npm run enrich-dishes
+          else
+            echo "ANTHROPIC_API_KEY not set — skipping dish enrichment (new spots fall back to the local taste line)."
+          fi
+
+      - name: Validate dataset invariants
+        run: npm run validate-data
+
+      - name: Typecheck + build gate
+        run: npm run typecheck && npm run build
+
+      - name: Commit & push refreshed data (live only)
+        if: env.MODE == 'live'
+        run: |
+          git add src/lib/restaurants.generated.json src/lib/restaurants.core.json scripts/.ingest-cache
+          if git diff --cached --quiet; then
+            echo "No data changes this week — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: scheduled refresh ($(date -u +%Y-%m-%d))"
+          git push

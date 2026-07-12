@@ -6,6 +6,26 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-07-11 — Automated weekly data refresh + PWA installability
+
+Two GTM plumbing pieces (Phase 3 continued):
+- **Scheduled refresh** — `.github/workflows/refresh-data.yml` runs the full
+  pipeline (ingest → enrich-dishes → validate → typecheck+build → commit) every
+  Monday, auto-deploying via the existing Vercel Git integration.
+  `scripts/.ingest-cache/` is now **committed** so CI ingests are cache-hit on
+  editorial (no churn/spend for existing spots). A `mode=sample` dispatch input
+  smoke-tests the whole pipeline offline without committing. Needs
+  `GOOGLE_PLACES_API_KEY` (+ optional `ANTHROPIC_API_KEY`) as repo secrets —
+  see `docs/deployment.md`.
+- **PWA installability** — `src/app/manifest.ts` (name/icons/standalone,
+  start_url `/feed`) + 192/512/maskable icons in `public/` + `appleWebApp`
+  metadata in `layout.tsx`, so "Add to Home Screen" gives an app-like install
+  on iOS and Android. **Deliberately no service worker**: the dataset ships in
+  the JS bundle, so SW caching risks serving a stale app after deploys for
+  marginal offline value.
+
+---
+
 ## 2026-07-11 — Dataset refresh + ingest preserves dishDescriptions
 
 First data refresh since 2026-06-22 (Phase 3 of the launch push): 1,569 spots (was

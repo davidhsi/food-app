@@ -65,9 +65,31 @@ is unset/stale — set it and **redeploy** (build-time inlining).
 3. **Redeploy** (e.g. `vercel redeploy <prod-url>` or push to `main`) so the new
    value is baked into the build.
 
+## Scheduled data refresh (GitHub Actions)
+
+`.github/workflows/refresh-data.yml` re-runs the full pipeline (ingest →
+enrich-dishes → validate → typecheck+build) **every Monday 09:00 UTC** and
+commits the refreshed JSON, which auto-deploys like any push to `main`.
+
+- **Repo secrets required** (GitHub → Settings → Secrets and variables →
+  Actions): `GOOGLE_PLACES_API_KEY` (required), `ANTHROPIC_API_KEY` (optional —
+  new spots get editorial + dish descriptions only when set). Without the
+  Places secret the weekly run fails fast at a guard step; nothing is
+  committed.
+- `scripts/.ingest-cache/` is **committed** (as of 2026-07-11) so CI ingests
+  are cache-hit on editorial — no copy churn, no Anthropic spend for existing
+  spots. The weekly run commits cache additions for new spots too.
+- **Manual/test runs:** Actions → "Refresh restaurant data" → Run workflow.
+  `mode=sample` exercises the whole pipeline offline from the 2-record fixture
+  and never commits (free smoke test); `mode=live` is a real refresh.
+- Each live run costs real Google Places quota (roughly $10–30) — keep the
+  Cloud-console budget alert + per-API quota caps in place.
+
 ## Not part of deploy
 
-- **Data ingest** (`npm run ingest`) runs **locally**, never during build; commit
-  the regenerated JSON. See `docs/superpowers/plans/2026-06-14-real-data-ingestion.md`.
+- **Ad-hoc data ingest** (`npm run ingest`) can still run **locally**, never
+  during build; commit the regenerated JSON. See
+  `docs/superpowers/plans/2026-06-14-real-data-ingestion.md`. The scheduled
+  workflow above is the steady-state path.
 - **Analytics / Speed Insights** need no config — they activate automatically on a
   Vercel deploy (the components are mounted in `layout.tsx`).

@@ -30,6 +30,13 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   applicationName: SITE_NAME,
+  // Installability (with app/manifest.ts): lets iOS "Add to Home Screen" run
+  // full-screen with the right title; Android/Chrome installs via the manifest.
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default",
+  },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
