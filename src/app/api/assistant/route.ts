@@ -345,7 +345,7 @@ async function askClaude(
 
   const leanUnderground = (profile.undergroundBias ?? 0.7) >= 0.5;
   const system =
-    "You are Truffle's food concierge. Truffle is about discovering UNDER-THE-RADAR spots before everyone else. " +
+    "You are Anaba's food concierge. Anaba is about discovering UNDER-THE-RADAR spots before everyone else. " +
     "If the message isn't actually a request for a recommendation — a greeting, a thanks, an acknowledgment, or small talk — reply warmly in ONE short sentence and return an EMPTY restaurantIds array. Do not force picks or invent a craving the user didn't express. " +
     "Otherwise, from the candidate restaurants ONLY, pick the 3-4 best for the user's request and taste profile. " +
     (leanUnderground

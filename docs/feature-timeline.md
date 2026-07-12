@@ -1,8 +1,20 @@
-# Truffle — feature timeline
+# Anaba — feature timeline
 
 A chronological log of shipped feature work (most recent first). Each entry links to
 the deeper design/plan/decision doc where one exists. Forward-looking work lives in
 `docs/ROADMAP.md`; the *why* behind non-obvious calls lives in `docs/decisions/`.
+
+---
+
+## 2026-07-11 — Renamed: Truffle → Anaba
+
+Pre-GTM domain purchase surfaced a senior same-category incumbent ("Truffle:
+Restaurant Tracker", App Store since 2021). Renamed to **Anaba** (穴場, Japanese
+for "a great spot only locals know") after vetting ~20 candidates across App
+Store / web / domains. Full sweep of user-facing strings, PWA/manifest identity,
+OG images, prompts, and the localStorage key; historical docs keep "Truffle".
+Decision (with the full shortlist + rejected alternatives):
+[`decisions/2026-07-11-rename-to-anaba.md`](decisions/2026-07-11-rename-to-anaba.md).
 
 ---
 

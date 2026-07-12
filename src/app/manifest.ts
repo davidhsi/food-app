@@ -9,8 +9,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Truffle — hidden-gem restaurants",
-    short_name: "Truffle",
+    name: "Anaba — hidden-gem restaurants",
+    short_name: "Anaba",
     description:
       "Find the under-the-radar spots before everyone else — ranked for your taste.",
     id: "/feed",

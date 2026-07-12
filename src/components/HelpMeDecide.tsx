@@ -43,7 +43,7 @@ export default function HelpMeDecide({ excludeId }: { excludeId?: string }) {
           }}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-olive py-3 text-sm font-semibold text-paper active:scale-[0.98]"
         >
-          <SparkleIcon width={17} height={17} /> Can&apos;t decide? Truffle picks tonight
+          <SparkleIcon width={17} height={17} /> Can&apos;t decide? Anaba picks tonight
         </button>
       ) : (
         <div className="rounded-2xl border border-line bg-paper-raised p-4 animate-floatUp">

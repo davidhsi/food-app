@@ -1,8 +1,8 @@
 {
-  "name": "truffle",
+  "name": "anaba",
   "version": "0.1.0",
   "private": true,
-  "description": "Truffle — a calm, editorial discovery app for under-the-radar restaurants, built around a hidden-gem recommendation engine.",
+  "description": "Anaba — a calm, editorial discovery app for under-the-radar restaurants, built around a hidden-gem recommendation engine.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

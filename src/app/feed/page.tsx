@@ -192,7 +192,7 @@ export default function DiscoverPage() {
         {!searchActive && (
           <header className="px-5 pb-2 pt-4">
             <div className="font-display text-2xl font-semibold tracking-tight text-ink">
-              Truffle<span className="text-olive">.</span>
+              Anaba<span className="text-olive">.</span>
             </div>
             <p className="mt-0.5 text-[13px] text-ink-soft">
               {nearMe

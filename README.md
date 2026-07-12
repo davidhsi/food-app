@@ -1,12 +1,12 @@
-# Truffle — find the spots before everyone else
+# Anaba — find the spots before everyone else
 
-A **calm, editorial discovery app for under-the-radar restaurants**. Where Google and Yelp surface the obvious and the crowded, Truffle digs up the hole-in-the-walls, no-sign supper clubs, and parking-lot taco trucks the locals guard — ranked for *your* taste, with the insider tip to order like a regular.
+A **calm, editorial discovery app for under-the-radar restaurants**. *Anaba* (穴場) is the Japanese word for exactly that: a great spot only the locals know. Where Google and Yelp surface the obvious and the crowded, Anaba digs up the hole-in-the-walls, no-sign supper clubs, and parking-lot taco trucks the locals guard — ranked for *your* taste, with the insider tip to order like a regular.
 
 > MVP built with Next.js 14 (App Router) + TypeScript + Tailwind + Zustand.
 
 ### Why this angle?
 
-The defensible wedge isn't another video feed or another star-rating clone; it's **anti-mainstream discovery**: the status and FOMO of finding a place *first*, where the data is genuinely bad and users are underserved. Truffle is built around a **"gem score"** (high quality × low mainstream buzz) that runs through the feed, search, and the AI concierge. The result is an editorial, taste-driven experience that feels closer to a trusted friend's recommendations than an algorithmic scroll.
+The defensible wedge isn't another video feed or another star-rating clone; it's **anti-mainstream discovery**: the status and FOMO of finding a place *first*, where the data is genuinely bad and users are underserved. Anaba is built around a **"gem score"** (high quality × low mainstream buzz) that runs through the feed, search, and the AI concierge. The result is an editorial, taste-driven experience that feels closer to a trusted friend's recommendations than an algorithmic scroll.
 
 ## ✨ What it does
 
@@ -25,7 +25,7 @@ Everything persists locally (Zustand + `localStorage`), and your likes / saves /
 
 ## 🎨 Design
 
-Truffle's look is **"Warm Editorial"** — calm and curated, deliberately *not* a loud doomscroll, casino, or dating-app swipe deck.
+Anaba's look is **"Warm Editorial"** — calm and curated, deliberately *not* a loud doomscroll, casino, or dating-app swipe deck.
 
 - **Palette ("Garden"):** paper `#F4F1E8` · ink `#1d2014` · olive accent `#5c6b2e` · gem `#cfe08a`, defined as semantic tokens in `tailwind.config.ts` (no raw hex in components).
 - **Type:** Fraunces (display) + Inter (body), loaded via `next/font`.

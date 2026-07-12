@@ -16,7 +16,7 @@ export function generateMetadata({
   const score = (gemScore(r) * 10).toFixed(1);
   const description = r.insiderTip
     ? `${where}. ${r.insiderTip}`
-    : `${where} — a ◆ ${score} hidden gem on Truffle.`;
+    : `${where} — a ◆ ${score} hidden gem on Anaba.`;
 
   return {
     title: r.name,

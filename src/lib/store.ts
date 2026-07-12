@@ -172,7 +172,7 @@ export const useStore = create<AppState>()(
         }),
     }),
     {
-      name: "truffle-store",
+      name: "anaba-store",
       // Bump on any breaking change to the persisted shape, and translate old
       // state in `migrate` — otherwise returning users rehydrate a stale shape
       // straight into the store. Version 1 = the pre-versioned launch shape

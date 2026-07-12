@@ -255,7 +255,7 @@ export default function Onboarding() {
         {step === 0 && (
           <div className="mb-8 animate-floatUp">
             <div className="font-display text-4xl font-semibold tracking-tight">
-              Truffle<span className="text-olive">.</span>
+              Anaba<span className="text-olive">.</span>
             </div>
             <p className="mt-2 text-sm text-ink-soft">
               Find the underground spots before everyone else — ranked for your

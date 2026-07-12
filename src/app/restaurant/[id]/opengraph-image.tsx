@@ -4,7 +4,7 @@ import { gemScore, posterUrl } from "@/lib/types";
 import { photoMediaUrl } from "../../../../scripts/places";
 
 export const runtime = "nodejs";
-export const alt = "Truffle restaurant";
+export const alt = "Anaba restaurant";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -57,7 +57,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             fontWeight: 700,
           }}
         >
-          Truffle
+          Anaba
         </div>
       ),
       size,
@@ -120,7 +120,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             letterSpacing: -1,
           }}
         >
-          Truffle<span style={{ color: GEM }}>.</span>
+          Anaba<span style={{ color: GEM }}>.</span>
         </div>
         {/* Content */}
         <div

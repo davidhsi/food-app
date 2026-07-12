@@ -27,7 +27,7 @@ export async function askClaudeOrder(
   const allergies = profile.allergies ?? [];
 
   const system =
-    "You are Truffle's ordering guide. The user is at (or considering) one restaurant and wants to know WHAT TO ORDER for their taste. " +
+    "You are Anaba's ordering guide. The user is at (or considering) one restaurant and wants to know WHAT TO ORDER for their taste. " +
     "Pick 2-3 dishes ONLY from the provided `signatureDishes` list — never invent or substitute a dish that isn't in that list. " +
     "For each pick, give a short, warm reason it suits the taste profile (cuisine, spice, vibe) — sound like a friend, not a label. Vary your phrasing across picks; don't reuse the same sentence shape, and don't fall back to \"a house signature\" for every dish. " +
     "Write a 1-sentence `intro` that sets up the order in a calm, lived-in voice (use the insider tip if it helps). " +

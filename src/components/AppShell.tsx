@@ -34,7 +34,7 @@ export default function AppShell({
     return (
       <div className="phone-shell flex items-center justify-center">
         <div className="animate-pulse font-display text-3xl font-semibold tracking-tight text-ink">
-          Truffle<span className="text-olive">.</span>
+          Anaba<span className="text-olive">.</span>
         </div>
       </div>
     );

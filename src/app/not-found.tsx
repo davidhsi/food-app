@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <div className="phone-shell flex flex-col items-center justify-center bg-paper px-8 text-center">
       <div className="font-display text-5xl font-semibold tracking-tight text-ink">
-        Truffle<span className="text-olive">.</span>
+        Anaba<span className="text-olive">.</span>
       </div>
       <h1 className="mt-6 font-display text-xl font-semibold text-ink">
         We couldn&apos;t find that page

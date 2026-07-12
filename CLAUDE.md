@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Truffle** — a calm, editorial discovery app for under-the-radar restaurants (Next.js 14 App Router + TypeScript + Tailwind + Zustand). It surfaces high-quality, low-buzz "hidden gems" ranked for the user's taste. It was rebranded and redesigned from a prior dark, TikTok-style "ReelEats" reels feed; that surface is fully retired (see `docs/superpowers/specs/2026-06-13-truffle-redesign-design.md`).
+**Anaba** — a calm, editorial discovery app for under-the-radar restaurants (Next.js 14 App Router + TypeScript + Tailwind + Zustand). It surfaces high-quality, low-buzz "hidden gems" ranked for the user's taste. *Anaba* (穴場) is Japanese for "a great spot only locals know." Renamed from "Truffle" on 2026-07-11 after discovering a senior same-category App Store incumbent ("Truffle: Restaurant Tracker", since 2021) — see `docs/decisions/2026-07-11-rename-to-anaba.md`; historical docs/specs keep the Truffle name. The product was originally rebranded/redesigned from a prior dark, TikTok-style "ReelEats" reels feed; that surface is fully retired (see `docs/superpowers/specs/2026-06-13-truffle-redesign-design.md`).
 
 ## Commands
 

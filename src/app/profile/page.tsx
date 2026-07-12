@@ -35,7 +35,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-4">
             <div className="grid h-16 w-16 place-items-center rounded-full bg-olive text-2xl ring-2 ring-line">
               <span className="font-display font-semibold text-paper text-2xl leading-none">
-                T
+                A
               </span>
             </div>
             <div>

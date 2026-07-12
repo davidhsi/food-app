@@ -13,7 +13,7 @@ export default function ShareSpot({ restaurant: r }: { restaurant: Restaurant })
       typeof window !== "undefined"
         ? `${window.location.origin}/restaurant/${r.id}`
         : "";
-    const text = `${r.name} — ${r.cuisines.join(", ")} · ${r.neighborhood}. A hidden gem I found on Truffle.`;
+    const text = `${r.name} — ${r.cuisines.join(", ")} · ${r.neighborhood}. A hidden gem I found on Anaba.`;
     const canShare =
       typeof navigator !== "undefined" && typeof navigator.share === "function";
     track("share_spot", { id: r.id, method: canShare ? "web_share" : "clipboard" });
