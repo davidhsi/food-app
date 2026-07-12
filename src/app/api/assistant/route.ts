@@ -11,6 +11,7 @@ import {
   seededPick,
 } from "@/lib/order";
 import { askClaudeOrder } from "@/lib/order.server";
+import { clientIp, makeRateLimiter } from "@/lib/ratelimit.server";
 
 export const runtime = "nodejs";
 
@@ -55,34 +56,8 @@ function clampHistory(raw: unknown): Turn[] {
     .slice(-MAX_HISTORY_TURNS);
 }
 
-// Best-effort in-memory rate limit. Caps Claude spend / abuse per client. It's
-// per-instance under Fluid Compute (not globally exact) — swap for a shared
-// store (e.g. Upstash) if a hard global limit is ever needed.
-const RATE_LIMIT = 15; // requests
-const RATE_WINDOW_MS = 60_000; // per minute
-const hits = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = hits.get(ip);
-  if (!entry || now > entry.resetAt) {
-    hits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    if (hits.size > 5000) {
-      // Bound memory: drop expired windows.
-      hits.forEach((v, k) => {
-        if (now > v.resetAt) hits.delete(k);
-      });
-    }
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > RATE_LIMIT;
-}
-
-function clientIp(req: NextRequest): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd ? fwd.split(",")[0].trim() : "unknown";
-}
+// Caps Claude spend / abuse per client (best-effort, per-instance).
+const rateLimited = makeRateLimiter(15, 60_000);
 
 /**
  * AI concierge. Uses Claude when ANTHROPIC_API_KEY is set to read the user's
@@ -123,7 +98,7 @@ export async function POST(req: NextRequest) {
 
   // "What should I order at X?" — if the query is an ordering question and names
   // a real restaurant, answer with a dish guide instead of recommending spots.
-  // Shares the same engine as the detail page's /api/order (see lib/order*).
+  // Shares the same engine as the detail page's OrderGuide (see lib/order*).
   if (isOrderIntent(query)) {
     const named = findNamedRestaurant(query);
     if (named) {

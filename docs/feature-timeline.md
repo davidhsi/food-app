@@ -6,6 +6,39 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-07-11 — Launch-readiness hardening (fresh-eyes review follow-up)
+
+An outside-in review (product surface, codebase, strategy audits + a live walkthrough)
+concluded the next unit of progress is real-user signal, not features. This pass closes
+the safety/honesty gaps that blocked putting the app in front of people:
+
+- **Deleted the orphaned `/api/order` route** — nothing called it since the pre-stored
+  dish descriptions change, but it was still deployed, unauthenticated, unlimited, and
+  calling Claude per POST. The concierge's ordering path (`/api/assistant` →
+  `askClaudeOrder`) is unchanged.
+- **Rate-limited `/api/photo`** (120/min/IP) and rejected extraneous query params —
+  every valid photo ref ships publicly in the client dataset, so cache-busted requests
+  were an unbounded billed-Google-call vector. Limiter extracted to a shared
+  `src/lib/ratelimit.server.ts` (also now used by `/api/assistant`).
+- **Versioned the persisted store** — `version: 1` + `migrate` on the zustand persist
+  (`store.ts`), backfilling missing profile fields from defaults, so future shape
+  changes can't silently corrupt returning users' localStorage.
+- **`posterUrl()` helper + placeholder** (`types.ts`) — one ingested record carries an
+  empty photo ref (`/api/photo?ref=`), a truthy-but-broken URL; all render sites now go
+  through the helper and a missing photo renders a quiet ◆ placeholder, never a broken
+  image.
+- **Directions link on the detail page** — the one outbound action (Google Maps place
+  search from name+area; new `directions_click` analytics event). Previously a
+  discovery dead-ended with no way to navigate, call, or see a menu.
+- **Honesty copy pass** — dropped the pseudo-stat "only about X% of people have found
+  it" (it was just `buzz` inverted) for a plain under-the-radar cue; replaced the feed's
+  "come back tomorrow for more" (nothing new arrives without a re-ingest); "Hours via
+  Google" now says "double-check before you go".
+
+Decision: [`decisions/2026-07-11-launch-readiness-hardening.md`](decisions/2026-07-11-launch-readiness-hardening.md).
+
+---
+
 ## 2026-06-21 — Detail-page UX: scroll memory, collapsible order guide, pre-stored dish descriptions
 
 Three changes from a detail-page UX pass (branch `worktree-horizontal-scroll-memory`):

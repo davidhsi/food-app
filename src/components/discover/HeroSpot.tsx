@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { gemScore, ScoredRestaurant } from "@/lib/types";
+import { gemScore, posterUrl, ScoredRestaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
 import { BookmarkIcon, ArrowRight } from "@/components/icons";
@@ -20,7 +20,7 @@ export default function HeroSpot({ scored }: { scored: ScoredRestaurant }) {
   const r = scored.restaurant;
   const toggleSave = useStore((s) => s.toggleSave);
   const isSaved = useStore((s) => s.saved.includes(r.id));
-  const poster = r.reels[0]?.poster;
+  const poster = posterUrl(r);
   const score = (gemScore(r) * 10).toFixed(1);
   const reason = scored.reasons[0];
 
@@ -32,6 +32,14 @@ export default function HeroSpot({ scored }: { scored: ScoredRestaurant }) {
       <article className="relative mt-2">
         <Link href={`/restaurant/${r.id}`} className="block text-left">
           <div className="relative h-64 overflow-hidden rounded-[22px] bg-line">
+            {!poster && (
+              <div
+                className="flex h-full w-full items-center justify-center text-3xl text-ink-faint"
+                aria-hidden="true"
+              >
+                ◆
+              </div>
+            )}
             {poster && (
               // eslint-disable-next-line @next/next/no-img-element
               <img

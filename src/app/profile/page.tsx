@@ -6,6 +6,7 @@ import Image from "next/image";
 import AppShell from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { getRestaurant } from "@/lib/data";
+import { posterUrl } from "@/lib/types";
 import { useScrollRestoration } from "@/lib/useScrollRestoration";
 import { StarIcon, XIcon } from "@/components/icons";
 
@@ -120,9 +121,9 @@ export default function ProfilePage() {
                           {i + 1}
                         </span>
                         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl">
-                          {r.reels[0]?.poster ? (
+                          {posterUrl(r) ? (
                             <Image
-                              src={r.reels[0].poster}
+                              src={posterUrl(r)!}
                               alt={r.name}
                               width={48}
                               height={48}
@@ -182,9 +183,9 @@ export default function ProfilePage() {
                       className="flex items-center gap-3 rounded-2xl bg-paper-raised p-2.5 ring-1 ring-line active:scale-[0.99]"
                     >
                       <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl">
-                        {r.reels[0]?.poster ? (
+                        {posterUrl(r) ? (
                           <Image
-                            src={r.reels[0].poster}
+                            src={posterUrl(r)!}
                             alt={r.name}
                             width={48}
                             height={48}

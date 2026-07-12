@@ -8,9 +8,9 @@ import {
 } from "./order";
 
 /**
- * Server-only Claude upgrade for the ordering guide. Shared by `/api/order`
- * (detail page) and `/api/assistant` (concierge "what should I order at X")
- * so the prompt + validation live in one place.
+ * Server-only Claude upgrade for the ordering guide, used by `/api/assistant`
+ * (concierge "what should I order at X") so the prompt + validation live in
+ * one place.
  *
  * Mirrors the key-less-fallback pattern in `src/app/api/assistant/route.ts`:
  * uses the API key when present, returns `null` on any failure so callers fall

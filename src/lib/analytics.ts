@@ -19,7 +19,8 @@ export type AnalyticsEvent =
   | "help_me_decide"
   | "neighborhood_select"
   | "map_open"
-  | "map_pin_tap";
+  | "map_pin_tap"
+  | "directions_click";
 
 type Props = Record<string, string | number | boolean | null>;
 

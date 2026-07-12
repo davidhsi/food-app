@@ -5,8 +5,8 @@ import { Allergen, Restaurant, TasteProfile, TopDish } from "./types";
  * taste-aware ordering guide ("what should I actually get here?").
  *
  * This module is **pure and client-safe** (only domain types, no dataset or
- * server imports), so both the detail page (`OrderGuide`) and the server routes
- * (`/api/order`, `/api/assistant`) share one source of truth. The deterministic
+ * server imports), so both the detail page (`OrderGuide`) and the server route
+ * (`/api/assistant`) share one source of truth. The deterministic
  * `buildLocalOrderGuide` is the always-available baseline; Claude only *upgrades*
  * it when a key is set (see the routes), so the feature never depends on a key.
  *

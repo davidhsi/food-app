@@ -17,6 +17,19 @@ export const DEFAULT_PROFILE: TasteProfile = {
   undergroundBias: 0.7,
 };
 
+/** The durable slice written to localStorage (see `partialize` below). */
+interface PersistedState {
+  onboarded: boolean;
+  profile: TasteProfile;
+  liked: string[];
+  saved: string[];
+  ranked: RankedEntry[];
+  seen: string[];
+  neighborhood: string | null;
+  neighborhoodTouched: boolean;
+  neighborhoodNearMe: boolean;
+}
+
 export interface AssistantMsg {
   role: "user" | "assistant";
   text: string;
@@ -160,6 +173,27 @@ export const useStore = create<AppState>()(
     }),
     {
       name: "truffle-store",
+      // Bump on any breaking change to the persisted shape, and translate old
+      // state in `migrate` — otherwise returning users rehydrate a stale shape
+      // straight into the store. Version 1 = the pre-versioned launch shape
+      // (zustand treats missing version as 0 and still runs migrate).
+      version: 1,
+      migrate: (persisted) => {
+        const s = (persisted ?? {}) as Partial<PersistedState>;
+        return {
+          onboarded: s.onboarded ?? false,
+          // Older profiles predate fields like `allergies` (ordering Phase 2)
+          // — backfill from defaults so downstream code can assume them.
+          profile: { ...DEFAULT_PROFILE, ...(s.profile ?? {}) },
+          liked: s.liked ?? [],
+          saved: s.saved ?? [],
+          ranked: s.ranked ?? [],
+          seen: s.seen ?? [],
+          neighborhood: s.neighborhood ?? null,
+          neighborhoodTouched: s.neighborhoodTouched ?? false,
+          neighborhoodNearMe: s.neighborhoodNearMe ?? false,
+        };
+      },
       // Persist only durable user data — keep ephemeral search/concierge UI
       // state in memory so it survives navigation but resets on a fresh open.
       partialize: (s) => ({

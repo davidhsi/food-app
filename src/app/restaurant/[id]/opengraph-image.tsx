@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getFullRestaurant } from "@/lib/data.server";
-import { gemScore } from "@/lib/types";
+import { gemScore, posterUrl } from "@/lib/types";
 import { photoMediaUrl } from "../../../../scripts/places";
 
 export const runtime = "nodejs";
@@ -64,7 +64,7 @@ export default async function Image({ params }: { params: { id: string } }) {
     );
   }
 
-  const photo = await loadPhoto(r.reels[0]?.poster);
+  const photo = await loadPhoto(posterUrl(r));
   const score = (gemScore(r) * 10).toFixed(1);
   const meta = `${r.cuisines.join(" · ")} · ${"$".repeat(r.price)} · ${r.neighborhood}`;
 

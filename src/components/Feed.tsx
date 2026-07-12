@@ -87,7 +87,8 @@ export default function Feed({
             You&apos;re all caught up
           </div>
           <p className="mt-1 text-[13px] text-ink-soft">
-            That&apos;s every gem for now — come back tomorrow for more.
+            That&apos;s the whole collection — try the map or the concierge to
+            slice it differently.
           </p>
           <button
             type="button"

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { gemScore, OpeningHours, Restaurant } from "@/lib/types";
+import { gemScore, OpeningHours, posterUrl, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { scoreRestaurant } from "@/lib/recommend";
 import { isOpenNow, todayHoursText } from "@/lib/hours";
@@ -48,9 +48,14 @@ export default function RestaurantDetail({
   const isLiked = liked.includes(r.id);
   const isSaved = saved.includes(r.id);
   const myRank = ranked.find((e) => e.restaurantId === r.id);
-  const poster = r.reels[0]?.poster;
-  const found = Math.round(r.buzz * 100);
+  const poster = posterUrl(r);
   const isGem = gemScore(r) >= 0.45;
+  // The one outbound action — lets a discovery become a visit (directions,
+  // phone, menu all live on the place listing). Name+area lands on the
+  // business, not a bare dropped pin.
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${r.name} ${r.neighborhood} ${r.city}`,
+  )}`;
 
   useEffect(() => {
     track("restaurant_view", { id: r.id, neighborhood: r.neighborhood });
@@ -73,6 +78,14 @@ export default function RestaurantDetail({
       <div className={`absolute inset-0 pb-10 ${ranking ? "overflow-hidden" : "overflow-y-auto"}`}>
       {/* Hero */}
       <div className="relative h-[44%] min-h-[300px] bg-line">
+        {!poster && (
+          <div
+            className="absolute inset-0 grid place-items-center text-4xl text-ink-faint"
+            aria-hidden="true"
+          >
+            ◆
+          </div>
+        )}
         {poster && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -120,7 +133,8 @@ export default function RestaurantDetail({
             ◷ You&apos;d be early
           </div>
           <p className="mt-0.5 text-sm text-ink-soft">
-            Still under the radar — only about {found}% of people have found it.
+            Still flying under the radar — the crowds haven&apos;t caught on
+            yet.
           </p>
         </div>
       )}
@@ -158,6 +172,20 @@ export default function RestaurantDetail({
           <HeartIcon filled={isLiked} width={20} height={20} />
         </button>
         <ShareSpot restaurant={r} />
+      </div>
+
+      {/* Outbound: hand off to the live place listing for directions/phone/menu */}
+      <div className="-mt-1 px-5 pb-1">
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => track("directions_click", { id: r.id })}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-olive"
+        >
+          <PinIcon width={15} height={15} />
+          Directions &amp; info on Google Maps
+        </a>
       </div>
 
       {/* Why you */}
@@ -244,7 +272,9 @@ function OpenNowLine({ hours }: { hours?: OpeningHours }) {
         {open ? "● Open now" : "○ Closed"}
       </span>
       {showToday && <span className="text-ink-soft">{today}</span>}
-      <span className="text-xs text-ink-faint">Hours via Google</span>
+      <span className="text-xs text-ink-faint">
+        Hours via Google — double-check before you go
+      </span>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import L from "leaflet";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { RESTAURANTS, getRestaurant } from "@/lib/data";
-import { gemScore, Restaurant } from "@/lib/types";
+import { gemScore, posterUrl, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { haversineKm, CHICAGO_CENTER } from "@/lib/geo";
 import { track } from "@/lib/analytics";
@@ -232,10 +232,10 @@ export default function MapView() {
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
             >
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-line">
-                {selected.r.reels[0]?.poster && (
+                {posterUrl(selected.r) && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={selected.r.reels[0].poster}
+                    src={posterUrl(selected.r)}
                     alt={selected.r.name}
                     loading="lazy"
                     decoding="async"

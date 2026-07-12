@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { gemScore, Restaurant } from "@/lib/types";
+import { gemScore, posterUrl, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
 import { BookmarkIcon } from "./icons";
@@ -12,7 +12,7 @@ const priceStr = (p: number) => "$".repeat(p);
 function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
   const toggleSave = useStore((s) => s.toggleSave);
   const isSaved = useStore((s) => s.saved.includes(r.id));
-  const poster = r.reels[0]?.poster;
+  const poster = posterUrl(r);
   const score = (gemScore(r) * 10).toFixed(1);
 
   return (
@@ -22,6 +22,14 @@ function SpotCard({ restaurant: r }: { restaurant: Restaurant }) {
         className="block w-full text-left"
       >
         <div className="relative h-52 overflow-hidden rounded-[20px] bg-line">
+          {!poster && (
+            <div
+              className="flex h-full w-full items-center justify-center text-2xl text-ink-faint"
+              aria-hidden="true"
+            >
+              ◆
+            </div>
+          )}
           {poster && (
             // eslint-disable-next-line @next/next/no-img-element
             <img

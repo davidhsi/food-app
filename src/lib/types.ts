@@ -148,6 +148,17 @@ export interface Restaurant {
   reels: Reel[];
 }
 
+/**
+ * The card/hero photo URL, or undefined when the record has none. A rare
+ * ingested record carries an empty photo ref (`/api/photo?ref=`) — a truthy
+ * string that 400s at the proxy — so treat it as missing and let the UI render
+ * its placeholder instead of a broken image.
+ */
+export function posterUrl(r: Restaurant): string | undefined {
+  const p = r.reels[0]?.poster;
+  return p && !p.endsWith("ref=") ? p : undefined;
+}
+
 /** How "under the radar" a spot is: high quality the crowds haven't found yet. */
 export function gemScore(r: Restaurant): number {
   const quality = r.rating / 10; // 0..1

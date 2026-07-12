@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Restaurant } from "@/lib/types";
+import { posterUrl, Restaurant } from "@/lib/types";
 import { getRestaurant } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
@@ -166,7 +166,7 @@ export default function RankModal({
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={opt.reels[0]?.poster}
+                    src={posterUrl(opt)}
                     alt={opt.name}
                     className="h-16 w-full rounded-lg object-cover bg-line"
                   />

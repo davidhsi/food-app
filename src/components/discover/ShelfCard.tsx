@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { gemScore, Restaurant } from "@/lib/types";
+import { gemScore, posterUrl, Restaurant } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { track } from "@/lib/analytics";
 import { BookmarkIcon } from "@/components/icons";
@@ -17,13 +17,21 @@ import { BookmarkIcon } from "@/components/icons";
 function ShelfCard({ restaurant: r }: { restaurant: Restaurant }) {
   const toggleSave = useStore((s) => s.toggleSave);
   const isSaved = useStore((s) => s.saved.includes(r.id));
-  const poster = r.reels[0]?.poster;
+  const poster = posterUrl(r);
   const score = (gemScore(r) * 10).toFixed(1);
 
   return (
     <article className="relative w-44 shrink-0">
       <Link href={`/restaurant/${r.id}`} className="block text-left">
         <div className="relative h-28 overflow-hidden rounded-2xl bg-line">
+          {!poster && (
+            <div
+              className="flex h-full w-full items-center justify-center text-xl text-ink-faint"
+              aria-hidden="true"
+            >
+              ◆
+            </div>
+          )}
           {poster && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
