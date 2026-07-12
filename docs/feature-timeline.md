@@ -6,6 +6,18 @@ the deeper design/plan/decision doc where one exists. Forward-looking work lives
 
 ---
 
+## 2026-07-11 — Dataset refresh + ingest preserves dishDescriptions
+
+First data refresh since 2026-06-22 (Phase 3 of the launch push): 1,569 spots (was
+1,600) — 199 removed (closures / below thresholds), 168 newly discovered, 70 with
+updated hours; `enrich-dishes` filled the 182 records missing dish descriptions
+(1,551/1,569 covered). Pipeline fix: `scripts/ingest.ts` now **carries forward
+`dishDescriptions`** from the previous dataset (keyed by id, filtered to current
+`signatureDishes`) so a re-ingest can't wipe the separately-paid-for enrich output.
+Editorial cache untouched — no copy churn.
+
+---
+
 ## 2026-07-11 — Launch-readiness hardening (fresh-eyes review follow-up)
 
 An outside-in review (product surface, codebase, strategy audits + a live walkthrough)
